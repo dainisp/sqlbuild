@@ -2,6 +2,7 @@
 #define CSCENE_H
 
 #include <QGraphicsScene>
+#include <QMenu>
 #include "ctableitem.h"
 class cscene : public QGraphicsScene
 {
@@ -13,6 +14,7 @@ public:
 void  publicate_keys();
 void addtable(ctable * atable,QString talias=QString());
 void addforeign(ctableitem * ftable,ctableitem * idtable);
+QMenu * menu;
 ctableitem * getselectedtable();
 QString make_query();
 void  removeat(ctableitem * ritem);

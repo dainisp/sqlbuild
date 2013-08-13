@@ -2,8 +2,13 @@
 
 cscene::cscene(QObject *parent): QGraphicsScene(parent)
 {
+    menu = new QMenu();
+    //menu.
     connect(this,SIGNAL(selectionChanged()),this,SLOT(performselection()));
 }
+
+
+
 
 
 void cscene::keyPressEvent ( QKeyEvent * keyEvent )
@@ -87,6 +92,18 @@ void cscene::place_tables(QList < csertable * > sertables, QList<ctable * > allt
         usedtables.last()->setTransform(transf);
 //usedtables.last()->setPos(sertable->position);
 usedtables.last()->outputfields =  sertable->outputfields;
+
+if(sertable->outputfields.count() > 0)
+for(int i=0;i<sertable->outputfields.count();i++)
+{
+    QGraphicsRectItem  * outrect = new QGraphicsRectItem(QRectF(0,(sertable->outputfields[i]+1)*usedtables.last()->defaultrowhight,usedtables.last()->defaultwidth,usedtables.last()->defaultrowhight),usedtables.last());
+//outrect->stackBefore (this);
+outrect->setFlag( QGraphicsItem::ItemStacksBehindParent,  true );
+outrect->setBrush(usedtables.last()->outcolor);
+usedtables.last()->outputrects.append(outrect);
+usedtables.last()->addToGroup(outrect);
+}
+
 usedtables.last()->keyfields =  sertable->keyfields ;
 
 
@@ -143,11 +160,13 @@ usedtables.last()->keyfields =  sertable->keyfields ;
 
 void cscene::addforeign(ctableitem * ftable,ctableitem * idtable)
 {
-int findex = ftable->table->fkeytables.indexOf(idtable->table);
+int findex = ftable->table->fkeys[
+        ftable->table->fkeytables.indexOf(idtable->table)
+        ];
 
 QPointF p1,p2,p1m,p2m;
 
-p1 = QPointF(0,(0.5 + (qreal)(findex+1) )  * ftable->defaultrowhight );
+p1 = QPointF(0,(0.5 + (qreal)( findex  +1) )  * ftable->defaultrowhight );
 p2 = QPointF(0,(0.5 +  (qreal)(idtable->table->primary  +1) ) * idtable->defaultrowhight);
 
 if(idtable->mapToScene(0,0).x() > ftable->mapToScene(0,0).x() )
@@ -255,7 +274,7 @@ QString cscene::make_query()
   if (fromq.isEmpty() ) fromq = QString("dual");
   QString retstr = QString("select %1 from %2").arg(selq).arg(fromq);
   if(!whereq.isEmpty())retstr += QString(" where ") + whereq;
-  return retstr;
+  return retstr.toLower();
 
 
 }

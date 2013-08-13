@@ -16,11 +16,13 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     cview.cpp \
     cscene.cpp \
-    ctableitem.cpp
+    ctableitem.cpp \
+    cconditionitem.cpp
 
 HEADERS  += mainwindow.h \
     cview.h \
     cscene.h \
-    ctableitem.h
+    ctableitem.h \
+    cconditionitem.h
 
 FORMS    += mainwindow.ui
