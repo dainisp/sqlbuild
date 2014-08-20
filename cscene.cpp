@@ -1,14 +1,56 @@
+
+#include <QKeyEvent>
 #include "cscene.h"
+#include "expr_dialog.h"
+
+
 
 cscene::cscene(QObject *parent): QGraphicsScene(parent)
 {
     menu = new QMenu();
+    mode=0;
     //menu.
     connect(this,SIGNAL(selectionChanged()),this,SLOT(performselection()));
 }
 
 
+void cscene::mousePressEvent(QGraphicsSceneMouseEvent * event)
+{
+ if(mode)
+    {
 
+  int argcount = 2;
+  QString name("Expr");
+  QString expr("\%1 + \%2 ");
+int rez =  expr_dialog::get_expr_params(&name, &argcount,&expr );
+ if(rez)
+ {
+  QStringList colnames;
+  colnames.append(name);
+  for(int i=1;i<=argcount;i++)
+      colnames.append(QString("ARGUMENT %1").arg(i));
+
+ cexpritem *  expritem = new cexpritem(expr,colnames);
+
+
+
+ QTransform transf;
+ transf.translate( event->pos().x(),event->pos().y() );
+  expritem->setTransform(transf);
+
+  addItem(expritem);
+mode = 0;
+
+ }
+
+
+
+
+ }
+else
+   QGraphicsScene::mousePressEvent(event) ;
+
+}
 
 
 void cscene::keyPressEvent ( QKeyEvent * keyEvent )
@@ -17,217 +59,221 @@ void cscene::keyPressEvent ( QKeyEvent * keyEvent )
   if(keyEvent->key()==Qt::Key_Delete)
   {
 
+      QList<catable *> seltables;
+
+      foreach(QGraphicsItem * item,selectedItems())
+        {
+
+         if( (item->type() & TTYPE_ABSTRACT)  == TTYPE_ABSTRACT   )
+           {
+            seltables.append( static_cast<catable *>(item));
+
+         }
 
 
-      int delcnt=0;
+      }
 
-   for(int i= usedtables.count()-1;i>=0;i--)
-       if(usedtables[i]->isSelected())
+      foreach (QGraphicsItem * item, items()) {
+
+
+      if((item->type() & TTYPE_LINK) == TTYPE_LINK )
+      {
+          calink * link = static_cast<calink * >(item);
+          if(link->isSelected()
+                  || seltables.indexOf( link->p1) >=0
+                  || seltables.indexOf( link->p2) >=0   )
        {
-       ctableitem * table = usedtables[i];
-       table->removelinksp();
-       removeItem(table);
-       delete table;
-       usedtables.removeAt(i);
-      delcnt++;
-       }
-   if(!delcnt)
-   {
- //findforeignl
-   //    QGraphicsScene::keyPressEvent(keyEvent);
-QList<QGraphicsItem *> selines = selectedItems();
-for(int i=selines.count()-1;i>=0;i--)
-{
+              removeItem(link);
+          delete link;
+      }
+      }
+      }
 
-    for(int j=0;j<usedtables.count();j++)
-   {
-      int fkind =  usedtables[j]->findforeignl(selines[i]);
-      if(fkind >=0 )usedtables[j]->removeforeign(fkind);
-}
+      foreach(catable * table,seltables)
+      {
+          removeItem(table);
+          delete table;
 
-}
-
-
-   }
-
-
+      }
 
    }
 
 }
 
 
-void cscene::addtable(ctable * atable, QString talias)
+crtableitem *  cscene::addtable(ctable * atable, QString talias)
 {
-    ctableitem * titem =  new ctableitem(atable);
+
+     QString alias=atable->alias;
+
     if(talias.isEmpty())
    {
-        QString alias = titem->table->alias;
-    if(alias.isEmpty())alias=titem->table->name;
-   int aliascount=0;
-    for(int i=0;i<usedtables.count();i++)
-        if(usedtables[i]->alias.startsWith(alias))aliascount++;
-    if(aliascount>0)alias+=QString::number(aliascount );
-      titem->alias = alias;
-    }else titem->alias = talias;
+     int aliascount=0;
+   foreach (QGraphicsItem *  item, items()) {
+       if((item->type() & TTYPE_TABLE) == TTYPE_TABLE )
+        {
+           crtableitem *  table = static_cast< crtableitem *>(item);
+           if(table->tablestring.startsWith(alias))aliascount++;
 
-   usedtables.append( titem );
-   addItem( titem);
-
-
-
-}
-
-void cscene::place_tables(QList < csertable * > sertables, QList<ctable * > alltables)
-{
-
-    foreach(csertable * sertable  ,sertables)
- {
-        addtable(alltables[sertable->tindex],sertable->alias);
-
-
-        QTransform transf;
-        transf.translate( sertable->position.x(),sertable->position.y() );
-
-        usedtables.last()->setTransform(transf);
-//usedtables.last()->setPos(sertable->position);
-usedtables.last()->outputfields =  sertable->outputfields;
-
-if(sertable->outputfields.count() > 0)
-for(int i=0;i<sertable->outputfields.count();i++)
-{
-    QGraphicsRectItem  * outrect = new QGraphicsRectItem(QRectF(0,(sertable->outputfields[i]+1)*usedtables.last()->defaultrowhight,usedtables.last()->defaultwidth,usedtables.last()->defaultrowhight),usedtables.last());
-//outrect->stackBefore (this);
-outrect->setFlag( QGraphicsItem::ItemStacksBehindParent,  true );
-outrect->setBrush(usedtables.last()->outcolor);
-usedtables.last()->outputrects.append(outrect);
-usedtables.last()->addToGroup(outrect);
-}
-
-usedtables.last()->keyfields =  sertable->keyfields ;
-
-
-    }
-
-    /*
-     *
-     *
-
-    int primary;
-
-
-
-
-  *
-     sertable.alias = alias;
- sertable.primary = usedtables.indexOf(primary);
- sertable.position = scenePos();
- sertable.iindex = usedtables.indexOf(this);
- sertable.outputfields = outputfields;
- sertable.keyfields = keyfields;
- foreach(ctableitem * titem,usedkeys)
-  sertable.usedkeys.append(usedtables.indexOf(titem));
- sertable.tindex = alltables.indexOf(table);
-
- QGraphicsLineItem * primline;
- QList<QGraphicsLineItem *> keylines;
-
-**/
-
-
-   foreach(csertable * sertable  ,sertables)
-   {
- ctableitem *    ftable =  usedtables[sertables.indexOf(sertable)];
-
-            if(sertable->primary >=0)   ftable->primary = usedtables[sertable->primary];
-
- foreach(int kindex,sertable->usedkeys)
-       {
-            ftable->usedkeys.append(usedtables[kindex]);
-
-        addforeign(ftable,ftable->usedkeys.last());
-         }
-  /*
-     for(int i=0;i<sertable->keyfields.count();i++)
-    addforeign(usedtables[i],idtable);
-*/
+       }
    }
 
 
 
+
+
+    if(aliascount>0)alias+=QString::number(aliascount );
+
+
+
+    }else alias = talias;
+
+
+
+
+
+
+
+    crtableitem * titem =  new crtableitem(atable,alias);
+
+
+
+   addItem( titem);
+
+return titem;
+
 }
 
 
-void cscene::addforeign(ctableitem * ftable,ctableitem * idtable)
+
+bool cscene::add_selected_link()
 {
-int findex = ftable->table->fkeys[
-        ftable->table->fkeytables.indexOf(idtable->table)
-        ];
+int firstcol,secondcol;
+catable * first = 0;
+catable * second =0;
 
-QPointF p1,p2,p1m,p2m;
+foreach (QGraphicsItem * item , this->items()) {
+ int ttype = item->type();
+ if( (ttype & TTYPE_ABSTRACT)  == TTYPE_ABSTRACT   )
+ {
 
-p1 = QPointF(0,(0.5 + (qreal)( findex  +1) )  * ftable->defaultrowhight );
-p2 = QPointF(0,(0.5 +  (qreal)(idtable->table->primary  +1) ) * idtable->defaultrowhight);
+  if(!first)
+  {
+    first = static_cast<catable *> (item);
+    int custind = first->coltypes.indexOf(CTYPE_CUSTOM_SELECTED);
+   if(custind >0 )
+      firstcol = custind;
+   else first = 0;
+  }
+  else
+  {
+   second =  static_cast<catable *> (item);
+    int custind = second->coltypes.indexOf(CTYPE_CUSTOM_SELECTED);
+   if(custind >0 )
+   {
+     secondcol = custind;
+     break;
+   }
+   else second = 0;
+  }
 
-if(idtable->mapToScene(0,0).x() > ftable->mapToScene(0,0).x() )
-   p1.setX( ftable->defaultwidth);
-else p2.setX( idtable->defaultwidth);
 
-
- p1m = ftable->mapToScene(p1) ;
-p2m = idtable->mapToScene(p2);
-QGraphicsLineItem * keyline = new QGraphicsLineItem(QLineF(p1m,p2m));
- keyline->setFlag (QGraphicsItem::ItemIsSelectable,  true );
-
-idtable->primline=keyline;
-ftable->keylines.append(keyline);
-
-addItem(keyline);
+ }
 
 }
+
+if(first != 0 && second !=0   )
+  {
+  add_link(first,second,firstcol,secondcol,TTYPE_CUSTOM_LINK);
+return true;
+}
+
+return false;
+
+
+}
+
+
+void cscene::add_link(catable * first, catable * second,
+                      int firstcol, int secondcol, int type, bool directed)
+{
+
+ calink * link = new calink(first,second,firstcol,secondcol,type,directed);
+
+ QPointF p1,p2,p1m,p2m;
+
+ p1 = QPointF(0,(0.5 + (qreal) firstcol)   * first->defaultrowhight );
+ p2 = QPointF(0,(0.5 +  (qreal)secondcol) * second->defaultrowhight);
+
+ if(second->mapToScene(0,0).x() > first->mapToScene(0,0).x() )
+    p1.setX( first->defaultwidth);
+ else p2.setX( second->defaultwidth);
+
+
+  p1m = first->mapToScene(p1) ;
+ p2m = second->mapToScene(p2);
+
+
+ link->setLine(QLineF(p1m,p2m) );
+
+
+ addItem(link);
+
+}
+
+
+
+
 
 
 
 void cscene::performselection()
 {
-    foreach(ctableitem * stable,  usedtables)
-  {
-      QBrush selbrush;
-      QBrush headb = stable->namerect->brush();
-
-      if(stable->isSelected())selbrush = QBrush(stable->scolor);
-      else selbrush = QBrush(stable->hcolor);
-      if(headb != selbrush )stable->namerect->setBrush(selbrush);
 
 
 
+
+    foreach (QGraphicsItem *  item, items())
+    {
+        if((item->type() & TTYPE_ABSTRACT) == TTYPE_ABSTRACT)
+         {
+           catable * table = static_cast<catable *>(item);
+          if(table->isSelected())
+              table->set_column_type(0,CTYPE_HEADER_SELECTED);
+          else
+              table->set_column_type(0,CTYPE_HEADER);
+        }
     }
 
 
+
+
 }
 
 
-ctableitem * cscene::getselectedtable()
+crtableitem * cscene::getselectedtable()
 {
 
+crtableitem * table;
 
-    if(selectedItems().count()>0)
-   {
-QGraphicsItem *  seltable =  selectedItems()[0];
-int i;
-for(i=0;i<usedtables.count();i++)
-    if(usedtables[i] == seltable)break;
-if(usedtables[i] == seltable)
-    return usedtables[i];
 
+foreach (QGraphicsItem *  item, selectedItems()) {
+    if((item->type() & TTYPE_TABLE) == TTYPE_TABLE )
+     {
+        table = static_cast< crtableitem *>(item);
+        return table;
+
+    }
 }
+
+
 return 0;
 
 }
 
 
 
-
+/*
 
 void  cscene::removeat(ctableitem * ritem)
 {
@@ -237,110 +283,450 @@ if(i<usedtables.count())usedtables.removeAt(i);
 
 }
 
-
+*/
 QString cscene::make_query()
 {
-    QString  whereq,fromq,selq;
+ int maxrowwidth = 80;
+
+ int wherwidth = 0;
+ int selwidth = 0;
+ int fromwidth = 0;
+  QString wherstr;
+QString selstr;
+ QString fromstr;
+ QMap<catable*,QString> exprmap;
+
+    foreach (QGraphicsItem *  item, items()) {
+        if((item->type() & TTYPE_TABLE) == TTYPE_TABLE )
+         {
+            crtableitem *  table = static_cast< crtableitem *>(item);
+        QString addfrom = QString(",%1 %2").arg(table->colnames[0]).arg(table->tablestring);
+            if(fromwidth + addfrom.length() > maxrowwidth)
+           {
+                fromwidth = addfrom.length();
+               fromstr += "\n" +  addfrom.toLower();
+           }
+            else
+            {
+                fromstr += addfrom.toLower();
+                fromwidth += addfrom.length();
+            }
+
+         for(int i=1;i<table->colcount;i++ )
+           {
+          if(table->coltypes[i] == CTYPE_OUTPUTFIELD )
+           {
+           QString addsel;
+           if(table->colstrings[i].isEmpty())
+           {
+            addsel = QString(",%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower();
+
+           }
+           else
+            {
+            addsel = "," +  table->colstrings[i].replace("?",QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower());
+           }
+
+           if(selwidth + addsel.count() > maxrowwidth )
+              {
+
+               selwidth = addsel.length();
+               selstr += "\n" + addsel;
+           }
+           else
+           {
+            selwidth +=  addsel.length();
+               selstr +=  addsel;
+           }
 
 
 
- for(int i=0;i<usedtables.count();i++)
+          }
+
+
+          if(table->coltypes[i] == CTYPE_WHERE_FIELD )
+           {
+
+              QString addwhere;
+              if(table->colstrings[i].isEmpty())
+              {
+               addwhere = QString(" AND ") + QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower();
+
+              }
+              else
+               {
+               addwhere = " AND " +  table->colstrings[i].replace("?",QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower());
+              }
+
+              if(wherwidth + addwhere.count() > maxrowwidth )
+                 {
+
+                  wherwidth = addwhere.length();
+                  wherstr += "\n" + addwhere;
+              }
+              else
+              {
+               wherwidth +=  addwhere.length();
+                  wherstr +=  addwhere;
+              }
+
+
+          }
+
+
+         }
+
+
+
+
+        }
+
+
+
+
+
+        if((item->type() & TTYPE_LINK) == TTYPE_LINK )
+         {
+
+         calink * link = static_cast<calink *>(item);
+
+
+
+
+
+         if((link->type() == TTYPE_CUSTOM_LINK && link->p1->type() != TTYPE_EXPRESSION && link->p2->type() != TTYPE_EXPRESSION   )   || link->type() == TTYPE_FOREIGN_LINK   )
+           {
+
+
+             QString addwhere = QString(" AND ")  + QString("%1.%2 = %3.%4")
+                .arg(link->p1->tablestring)
+                .arg(link->p1->colnames[link->cols1])
+                .arg(link->p2->tablestring)
+                .arg(link->p2->colnames[link->cols2]).toLower();
+
+        if(wherwidth + addwhere.count() > maxrowwidth )
+           {
+
+            wherwidth = addwhere.length();
+            wherstr += "\n" + addwhere;
+        }
+        else
+        {
+         wherwidth +=  addwhere.length();
+            wherstr +=  addwhere;
+        }
+
+
+
+
+         }
+         else
+         {
+         if(link->p1->type() == TTYPE_EXPRESSION || link->p2->type() == TTYPE_EXPRESSION )
+          {
+           catable * expr;
+           crtableitem * table;
+           int tabcol,exprcol;
+             if(link->p1->type() == TTYPE_EXPRESSION )
+           {
+              expr = link->p1;
+
+              table = static_cast< crtableitem * >(link->p2);
+          exprcol = link->cols1;
+          tabcol = link->cols2;
+             }
+           else
+          {
+                 expr = link->p2;
+                 table = static_cast< crtableitem * >(link->p1);
+             exprcol = link->cols2;
+             tabcol = link->cols1;
+
+             }
+       if(exprmap.keys().indexOf(expr) < 0)
+           exprmap.insert(expr,expr->tablestring);
+
+        exprmap[expr] = exprmap[expr].replace("?" + QString::number(exprcol),table->tablestring + "." + table->colnames[tabcol]  );
+        if(exprmap[expr].indexOf("?")<0)
+        {
+        QString addwhere = QString(" AND ")  + exprmap[expr];
+
+        if(wherwidth + addwhere.count() > maxrowwidth )
+           {
+
+            wherwidth = addwhere.length();
+            wherstr += "\n" + addwhere;
+        }
+        else
+        {
+         wherwidth +=  addwhere.length();
+            wherstr +=  addwhere;
+        }
+
+
+        }
+
+
+
+         }
+
+
+
+
+         }
+
+
+
+        }
+
+
+
+
+
+}
+
+
+    QRegExp wherexp("^[\\r\\n\\s]*AND ");
+     QRegExp selexpr("^[\\r\\n]*,");
+
+  wherstr.replace(wherexp,"");
+  selstr.replace(selexpr,"");
+  fromstr.replace(selexpr,"");
+
+  if (selstr.isEmpty() )selstr=QString("*");
+  if (fromstr.isEmpty() ) fromstr = QString("DUAL");
+  QString retstr = QString("SELECT %1\nFROM %2").arg(selstr).arg(fromstr);
+  if(!wherstr.isEmpty())retstr += QString("\nWHERE ") + wherstr;
+  return retstr;
+
+
+}
+
+void cscene::savel_to_stream(QDataStream * stream, QList<catable *> tlist)
+{
+
+   QList<calink * > llist;
+    foreach (QGraphicsItem *  item, items()) {
+        if((item->type() & TTYPE_LINK) == TTYPE_LINK )
+         {
+           llist.append(static_cast<calink *>(item ));
+        }
+    }
+*stream << llist.count();
+    foreach (calink * link,llist) {
+
+        *stream <<  link->ltype;
+       if(link->directedt)
+        *stream << tlist.indexOf(link->directedt);
+       else *stream << -1;
+
+       *stream <<  tlist.indexOf(link->p1);
+       *stream << tlist.indexOf(link->p2);
+       *stream << link->cols1;
+       *stream << link->cols2;
+    }
+
+}
+
+void cscene::loadl_from_stream(QDataStream * stream,QList<catable *> tlist)
+{
+    //ltype << directedt<< p1 << p2 << cols1 << cols2 <<  << ;
+ int lcount;
+*stream >> lcount;
+ for(int i=0;i<lcount;i++)
  {
-     ctableitem * table = usedtables[i];
-     for(int j=0;j<table->outputfields.count();j++)
-       {
-         selq += QString(",%1.%2").arg(table->alias).arg(table->table->fields[table->outputfields[j]]);
-     }
-     fromq += QString(",%1 %2").arg(table->table->name).arg(table->alias);
+ int ltype;
+ *stream >> ltype;
+ int directedt;
+*stream >> directedt;
+/*
+ catable * tdirectedt;
 
+if(directedt >= 0)
+  tdirectedt = tlist[directedt];
+*/
+ int p1;
+*stream >> p1;
+catable * tp1 = tlist[p1];
+        int p2;
+       *stream >> p2;
+       catable * tp2 = tlist[p2];
+ int cols1,cols2;
+ *stream >> cols1 >> cols2;
 
-     for(int j=0;j<table->keyfields.count();j++)
-      {
-         ctableitem *  rtable = table->usedkeys[j];
-         whereq += QString(" and %1.%2 = %3.%4").arg(table->alias).arg(table->table->fields[table->table->fkeys[table->keyfields[j]]]).arg(rtable->alias).arg(rtable->table->fields[rtable->table->primary]);
-     }
-
-     //QList<ctableitem *  > usedkeys;
-     //QList<int> keyfields;
+if(directedt == p1 )
+    add_link(tp2,tp1,cols2,cols1,ltype,true);
+else
+ add_link(tp1,tp2,cols1,cols2,ltype,(directedt >= 0));
 
 
  }
 
-  whereq.remove(0,4);
-  selq.remove(0,1);
-  fromq.remove(0,1);
+}
 
-  if (selq.isEmpty() )selq=QString("*");
-  if (fromq.isEmpty() ) fromq = QString("dual");
-  QString retstr = QString("select %1 from %2").arg(selq).arg(fromq);
-  if(!whereq.isEmpty())retstr += QString(" where ") + whereq;
-  return retstr.toLower();
+QList<catable *> cscene::save_to_stream(QDataStream * stream)
+{
 
+    QList<catable *> tlist;
 
+    foreach (QGraphicsItem *  item, items()) {
+        if((item->type() & TTYPE_ABSTRACT) == TTYPE_ABSTRACT )
+         {
+           tlist.append(static_cast<catable *>(item) );
+        }
+}
+ *stream << tlist.count();
+        foreach (catable * table, tlist) {
+
+            *stream << table->type();
+            if((table->type() & TTYPE_TABLE) == TTYPE_TABLE )
+            *stream << alltables->indexOf(static_cast<crtableitem * >(table)->table );
+            else
+              *stream << 0;
+           *stream << table->tablestring;
+            *stream << table->colnames;
+            *stream << table->coltypes;
+            *stream << table->colstrings;
+            *stream << table->scenePos();
+
+        }
+ return tlist;
 }
 
 
 
+QList<catable *> cscene::load_from_stream(QDataStream *stream)
+{
+//stream ttype << tindex <<  tablestring
+  //   colnames      << coltypes << colstrings << position  ;
+    QList<catable *> tlist;
+ int tcount;
+ *stream >> tcount;
+ for(int i=0;i<tcount;i++)
+ {
+ int ttype;
+  *stream >> ttype;
+  int tindex;
+  QString tablestring;
+  QStringList colnames;
+  *stream >> tindex;
+  *stream >> tablestring;
+  *stream >> colnames;
+   QList<int> coltypes;
+ catable * atable;
+
+   if((ttype & TTYPE_TABLE) == TTYPE_TABLE   )
+    {
+
+    crtableitem * table = new crtableitem(alltables->at(tindex),tablestring);
+  atable = table;
+   }
+  else
+   {
+    atable = new catable(colnames,tablestring);
+       atable->set_type(ttype);
+
+   }
+ *stream >> coltypes;
+ atable->set_column_types(coltypes);
+ QStringList colstrings;
+ *stream >> colstrings;
+ atable->colstrings = colstrings;
+ QPointF position;
+*stream >> position;
+//table.
+ QTransform transform;
+ transform.translate(position.x(),position.y());
+
+
+ atable->setTransform(transform);
+//atable->setPos(position);
+ tlist.append(atable);
+ addItem(atable);
+ }
+
+ return tlist;
+}
 
 void  cscene::publicate_keys()
 {
-    for(int i=0;i<usedtables.count();i++)
-    {
-        ctable * curtable = usedtables[i]->table;
+//----------------------Add custom links
 
-        for(int j=0;j<curtable->fkeys.count();j++)
-     {
-int f;
-for( f=0;f<usedtables.count();f++)
- {
-    if(f!=i && usedtables[f]->table == curtable->fkeytables[j]
-&& !(usedtables[f]->primline) &&  usedtables[i]->findforeign(usedtables[f]) < 0  &&  usedtables[i]->findforeignind(j)<0  )break;
-}
+
+    if(add_selected_link())
+        return;
+
+   // ----------------------------------
 
 
 
-if(f<usedtables.count()){
 
-  /*
-    QPointF p1,p2,p1m,p2m;
+    foreach (QGraphicsItem *  item, items())
+       {
+        if((item->type() & TTYPE_TABLE) == TTYPE_TABLE )
+         {
+            crtableitem *  table = static_cast< crtableitem *>(item);
 
-p1 = QPointF(0,(0.5 + (qreal)(curtable->fkeys[j]+1) )  * usedtables[i]->defaultrowhight );
-p2 = QPointF(0,(0.5 +  (qreal)(usedtables[f]->table->primary  +1) ) * usedtables[f]->defaultrowhight);
+            for(int i= 0;i<table->table->fkeys.count();i++)
+            {
+                crtableitem * prim_item =   find_primary_table(table->table->fkeytables[i]);
+                if(prim_item)
+                    add_link(table,prim_item,table->table->fkeys[i]+1,
+                             prim_item->table->primary+1,TTYPE_FOREIGN_LINK,true);
 
-if(usedtables[f]->mapToScene(0,0).x() > usedtables[i]->mapToScene(0,0).x() )
-   p1.setX( usedtables[i]->defaultwidth);
-else p2.setX( usedtables[f]->defaultwidth);
-
-
- p1m =  usedtables[i]->mapToScene(p1) ;
-p2m = usedtables[f]->mapToScene(p2);
-QGraphicsLineItem * keyline = new QGraphicsLineItem(QLineF(p1m,p2m));
- keyline->setFlag (QGraphicsItem::ItemIsSelectable,  true );
-
-usedtables[f]->primline=keyline;
-usedtables[i]->keylines.append(keyline);
-usedtables[f]->primary=usedtables[i];
-usedtables[i]->keyfields.append(j);
-usedtables[i]->usedkeys.append(usedtables[f]);
+            }
 
 
-idtable->primline=keyline;
-ftable->keylines.append(keyline);
+         }
 
-this->addItem(keyline);
-*/
-
-addforeign(usedtables[i],usedtables[f]);
-usedtables[f]->primary=usedtables[i];
-usedtables[i]->keyfields.append(j);
-usedtables[i]->usedkeys.append(usedtables[f]);
-
-}
         }
 
 
-    }
-
 
 
 }
+
+crtableitem * cscene::find_primary_table(ctable * table)
+{
+
+    foreach (QGraphicsItem *  item, items()) {
+        if((item->type() & TTYPE_TABLE) == TTYPE_TABLE )
+         {
+            crtableitem *  prim_item = static_cast< crtableitem *>(item);
+            if(prim_item->table == table) // vai atrastajai tabulas vienibai prototips sakrit
+              {
+                bool found = false;
+                foreach (QGraphicsItem *  item, items()) {
+                    if((item->type() & TTYPE_FOREIGN_LINK) == TTYPE_FOREIGN_LINK )
+                     {
+                        calink * link = static_cast<calink *>(item);
+                        if(link->directedt == prim_item)
+                           {
+                        found = true;
+                            break;
+                    }  }
+                }
+
+                if(!found) // primara atslega briva
+                    return prim_item;
+              }
+      }
+
+}
+
+return 0;
+ }
+
+/*
+void cscene::addforeign(crtableitem * ftable,crtableitem * idtable)
+{
+
+//    add_link(table,prim_item,table->table->fkeys[i]+1,
+  //           prim_item->table->primary+1,TTYPE_FOREIGN_LINK,true);
+
+ add_link(ftable,idtable,ftable->table->fkeys);
+
+
+}
+
+*/

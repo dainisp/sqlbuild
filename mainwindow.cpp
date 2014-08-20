@@ -2,9 +2,11 @@
 #include <QDomDocument>
 #include <QMessageBox>
 #include <QSettings>
+#include "dialog.h"
 #include "mainwindow.h"
-
 #include "ui_mainwindow.h"
+#include  "catable.h"
+#include "crtableitem.h"
 //#include "sqlparser.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -17,8 +19,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->splitter->setStretchFactor(1,1);
     ui->splitter_2->setStretchFactor(0,0);
     ui->splitter_2->setStretchFactor(1,1);
+    scene.alltables = &alltables;
 ui->laukums->setScene(&scene);
-  ui->laukums->scale(5,5);
+  ui->laukums->scale(0.8,0.8);
 
   //connect(ui->laukums,SIGNAL(scaled(qreal)),this,SLOT(onviewscaled(qreal)));
   ui->laukums->setAcceptDrops(true);
@@ -35,36 +38,39 @@ ui->laukums->setScene(&scene);
 
     }
 
+if(QApplication::arguments().count()>1)
+{
+load_field(QApplication::arguments()[1]);
+
+
+
+}
 
 }
 
 
 
-  QList < csertable * >  MainWindow::load_field(QString filename)
+  void  MainWindow::load_field(QString filename)
   {
 
-   QList <csertable *> stlist;
+
 
     QFile infile(filename);
     if(  infile.open(QIODevice::ReadOnly ))
    {
     QDataStream instream(&infile);
-
-    while(!infile.atEnd())
-   {
-   csertable * sertable = new csertable;
-
-   instream >> sertable->alias  >>  sertable->primary  >>  sertable->position  >>  sertable->tindex  >>
-          sertable->iindex >> sertable->outputfields  >>  sertable->keyfields  >>  sertable->usedkeys;
-stlist.append(sertable);
-    }
+QList<catable *> tlist =  scene.load_from_stream(&instream);
+scene.loadl_from_stream(&instream,tlist);
 
 
    infile.close();
 
     }
-   return stlist;
+
   }
+
+
+
 
 
 
@@ -76,21 +82,19 @@ void MainWindow::save_field(QString filename)
    {
     QDataStream outstream(&outfile);
 
-    foreach( ctableitem * titem,scene.usedtables)
-    {
-        csertable sertable = titem->gensertable(scene.usedtables,alltables);
-
-
-     outstream << sertable.alias << sertable.primary << sertable.position << sertable.tindex
-                  << sertable.iindex << sertable.outputfields << sertable.keyfields << sertable.usedkeys;
-
-    }
-outfile.close();
-
-    }
-
-
+    QList<  catable * > tlist = scene.save_to_stream(&outstream);
+    scene.savel_to_stream(&outstream,tlist);
+    outfile.close();
+        }
 }
+
+
+
+
+
+
+
+
 
 void MainWindow::save_settings()
 {
@@ -155,6 +159,12 @@ QString tname;
 ctable * table;
 
 ui->tlistv->clear();
+if(alltables.count())
+  {
+    foreach(ctable * table,alltables)
+        delete table;
+alltables.clear();
+}
 for(int i=0;i<tlist.count();i++)
 {
 
@@ -376,6 +386,16 @@ for(int i=0;i<flist.count();i++)scene.addtable(flist[i]);
 
   void MainWindow::on_list_doubleClicked ( const QModelIndex & index )
   {
+      /*
+  Qt::KeyboardModifiers modifiers  =   QApplication::queryKeyboardModifiers ();
+  if(modifiers & Qt::ShiftModifier)
+  {
+
+      crtableitem * table = new crtableitem(alltables[index.row()]);
+      scene.addItem(table);
+  }
+  else
+      */
  scene.addtable(alltables[index.row()]);
 
   }
@@ -400,19 +420,25 @@ ui->tlistv->scrollToItem(itlst[0]);
 
 }
 
+int do_parse(QString inputstr, cscene * scene,   QList<ctable * > * tables );
+
 void MainWindow::on_parseb_clicked()
 {
-/*
-int pres = do_parse(ui->queryt->toPlainText().toStdString(), &scene,&alltables);
+QString query = ui->queryt->toPlainText().trimmed();
+if(query.left(1) != ";")
+    query.append(';');
+query = "EXEC SQL\n" + query;
+
+int pres = do_parse(query, &scene,&alltables);
 if(pres==1)QMessageBox::warning ( this, "SQLbuild", "Query parse error!");
 if(pres==2)QMessageBox::warning ( this, "SQLbuild", "Query parsed, but selected table not in list");
-*/
+
 }
 
 void MainWindow::on_appendfb_clicked()
 {
 // usedtables
-ctableitem *  seltable = scene.getselectedtable();
+crtableitem *  seltable = scene.getselectedtable();
         if(seltable)
          addlinkedtablesp(  seltable->table );
 
@@ -421,7 +447,7 @@ ctableitem *  seltable = scene.getselectedtable();
 void MainWindow::on_flistb_clicked()
 {
 
-ctableitem *  seltable = scene.getselectedtable();
+crtableitem *  seltable = scene.getselectedtable();
 if (seltable)
 {
 ui->foreignl->clear();
@@ -442,7 +468,7 @@ void MainWindow::on_foreignl_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::on_savefb_clicked()
 {
-    QString fname = QFileDialog::getSaveFileName ( this, "Save query" );
+    QString fname = QFileDialog::getSaveFileName ( this, QString("Save query"),QString(),QString("Sqlbuild (*.sqb)"));
     if(!fname.isEmpty())
      {
 save_field(fname);
@@ -456,12 +482,12 @@ save_field(fname);
 
 void MainWindow::on_loadfb_clicked()
 {
-    QString fname = QFileDialog::getOpenFileName ( this, "Open query" );
+    QString fname = QFileDialog::getOpenFileName ( this, "Open query" ,QString(),QString("Sqlbuild (*.sqb)"));
     if(!fname.isEmpty())
      {
 
-      QList < csertable * >  sertable = load_field(fname) ;
-scene.place_tables(sertable,alltables);
+      load_field(fname) ;
+    //scene.place_tables(sertable,alltables);
 
 
 
@@ -474,13 +500,13 @@ scene.place_tables(sertable,alltables);
 void MainWindow::on_copyb_clicked()
 {
 
-    ctableitem *  seltable = scene.getselectedtable();
+    crtableitem *  seltable = scene.getselectedtable();
     scene.addtable(seltable->table);
 }
 
 void MainWindow::on_addprimb_clicked()
 {
-    ctableitem *  seltable = scene.getselectedtable();
+    crtableitem *  seltable = scene.getselectedtable();
     if (seltable)
     {
     ui->foreignl->clear();
@@ -491,4 +517,39 @@ void MainWindow::on_addprimb_clicked()
 
     }
 
+}
+
+void MainWindow::on_settb_clicked()
+{
+  Dialog dialog;
+    QSettings settings("Dainis Soft", "SQLBuild");
+
+    dialog.set_settings(&settings);
+
+}
+
+void MainWindow::on_exprb_clicked()
+{
+  if(scene.mode)
+    scene.mode = 0;
+  else
+      scene.mode = 1;
+
+
+}
+
+void MainWindow::on_toolButton_3_clicked()
+{
+    QStringList colnames;
+    colnames << "HEADER" << "COL1"  << "COL2" << "COL3";
+
+    catable * tbl = new catable(colnames) ;
+    int ttp = tbl->type();
+
+    scene.addItem(new catable(colnames) );
+}
+
+void MainWindow::on_toolButton_2_clicked()
+{
+scene.add_selected_link();
 }

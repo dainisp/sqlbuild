@@ -6,171 +6,321 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>643</width>
-    <height>486</height>
+    <width>735</width>
+    <height>606</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>SqlBuild</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="sqlbuild.qrc">
+    <normaloff>:/images/sqlbuild.png</normaloff>:/images/sqlbuild.png</iconset>
+  </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,0">
     <item>
-     <widget class="QSplitter" name="splitter_3">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <widget class="QSplitter" name="splitter_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <widget class="QWidget" name="layoutWidget">
-        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
-         <item>
-          <widget class="QSplitter" name="splitter">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <widget class="QListWidget" name="tlistv">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>60</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>16777215</height>
-             </size>
-            </property>
-           </widget>
-           <widget class="QListWidget" name="foreignl"/>
-          </widget>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QSplitter" name="splitter_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <widget class="QSplitter" name="splitter_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QWidget" name="layoutWidget">
+          <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
            <item>
-            <widget class="QLineEdit" name="lineEdit">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <widget class="QSplitter" name="splitter">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
              </property>
+             <widget class="QListWidget" name="tlistv">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+             <widget class="QListWidget" name="foreignl"/>
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="toolButton">
-             <property name="text">
-              <string>...</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QLineEdit" name="lineEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QComboBox" name="comboBox">
+               <item>
+                <property name="text">
+                 <string>=</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>&lt;&gt;</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>&gt;</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>&lt;</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>&gt;=</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>&lt;=</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>LIKE</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>NOT LIKE</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_4">
+               <item>
+                <widget class="QRadioButton" name="radioButton">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioButton_2">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioButton_3">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QLineEdit" name="lineEdit_2"/>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBox"/>
+               </item>
+               <item>
+                <widget class="QDateEdit" name="dateEdit"/>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </item>
           </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="cview" name="laukums">
-        <property name="dragMode">
-         <enum>QGraphicsView::RubberBandDrag</enum>
-        </property>
-        <property name="rubberBandSelectionMode">
-         <enum>Qt::ContainsItemBoundingRect</enum>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QPlainTextEdit" name="queryt">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>100</height>
-        </size>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QPushButton" name="pushButton">
-        <property name="text">
-         <string>Load tables</string>
-        </property>
+         </widget>
+         <widget class="cview" name="laukums">
+          <property name="dragMode">
+           <enum>QGraphicsView::RubberBandDrag</enum>
+          </property>
+          <property name="rubberBandSelectionMode">
+           <enum>Qt::ContainsItemBoundingRect</enum>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QPlainTextEdit" name="queryt">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+        </widget>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="loadfb">
-        <property name="text">
-         <string>Load</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>Load tables</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="loadfb">
+          <property name="text">
+           <string>Load</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="savefb">
+          <property name="text">
+           <string>Save</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="settb">
+          <property name="text">
+           <string>Settings</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="savefb">
-        <property name="text">
-         <string>Save</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="text">
+           <string>Make joins</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="flistb">
+          <property name="text">
+           <string>Add foreigns</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="addprimb">
+          <property name="text">
+           <string>Add primaries</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="copyb">
+          <property name="text">
+           <string>Copy table</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="appendfb">
+          <property name="text">
+           <string>Append tables</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_3">
+          <property name="text">
+           <string>Make query</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="parseb">
+          <property name="text">
+           <string>Parse query</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QToolButton" name="exprb">
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>14</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="text">
-         <string>Make joins</string>
+         <string>F(x)</string>
+        </property>
+        <property name="autoRaise">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="flistb">
+       <widget class="QToolButton" name="toolButton_3">
         <property name="text">
-         <string>Add foreigns</string>
+         <string>...</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="addprimb">
+       <widget class="QToolButton" name="toolButton_2">
         <property name="text">
-         <string>Add primaries</string>
+         <string>...</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="copyb">
-        <property name="text">
-         <string>Copy table</string>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="appendfb">
-        <property name="text">
-         <string>Append tables</string>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_3">
-        <property name="text">
-         <string>Make query</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="parseb">
-        <property name="text">
-         <string>Parse query</string>
-        </property>
-       </widget>
+       </spacer>
       </item>
      </layout>
     </item>
@@ -181,8 +331,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>643</width>
-     <height>23</height>
+     <width>735</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>
@@ -207,7 +357,9 @@
    </slots>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="sqlbuild.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>laukums</sender>
