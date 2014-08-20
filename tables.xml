@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tables>
+<table><name>table1</name><alias>t1</alias><field>id</field></table>  
+<table><name>table1</name><alias>t1</alias><field>field1</field></table>
+<table><name>table1</name><alias>t1</alias><field>field2</field></table>
+<table><name>table1</name><alias>t1</alias><field>field3</field></table>
+<table><name>table2</name><alias>t2</alias><field>id</field></table>
+<table><name>table2</name><alias>t2</alias><field>field1</field></table>
+<table><name>table2</name><alias>t2</alias><field>field2</field></table>
+<table><name>table2</name><alias>t2</alias><field>field3</field></table>
+<table><name>table3garaaks</name><alias>t3</alias><field>id</field></table>
+<table><name>table3garaaks</name><alias>t3</alias><field>field1</field></table>
+<table><name>table3garaaks</name><alias>t3</alias><field>field2</field></table>
+<table><name>table3garaaks</name><alias>t3</alias><field>field3</field></table>
+</tables> 

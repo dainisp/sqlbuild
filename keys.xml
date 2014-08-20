@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<keys>
+<key><table>table1</table><keyfield>field1</keyfield><remote_table>table2</remote_table></key>
+<key><table>table1</table><keyfield>field2</keyfield><remote_table>table3garaaks</remote_table></key>
+<key><table>table2</table><keyfield>id</keyfield></key>
+<key><table>table3garaaks</table><keyfield>id</keyfield></key>
+</keys>
