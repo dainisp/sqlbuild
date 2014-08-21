@@ -2,7 +2,7 @@
 %{
 // In this section we can add all needed headers, from Qt or another libraries.
 
-
+#include <QString>
 // Also, we must add the parser's header where are defined the tokens.
 #include "sql2.h"
 #define YY_DECL int yylex(void)
@@ -10,9 +10,9 @@ int lineno = 1;
 
 #define TOK(name) { return name; }
 extern void yyerror(const char *s);
-extern char * save_str(char *s);
+extern QString * save_str(char *s);
 extern void start_save();
-extern void save_comparison(char * operation);
+extern void save_comparison(QString * operation);
 
 
 
@@ -272,7 +272,7 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>"<"	|
 <SQL>">"	|
 <SQL>"<="	|
-<SQL>">="	    {save_comparison(yytext); return COMPARISON;}
+<SQL>">="	    {  save_comparison(save_str(yytext)); return COMPARISON;}
 
 
 <SQL>"=>" {return ARG_REF;}

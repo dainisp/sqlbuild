@@ -6,9 +6,6 @@
 #include "cscene.h"
 //#include "ctableitem.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 #include "scn2.h"
 #include "sql2.h"
@@ -24,24 +21,24 @@ extern char * errorstr;
 
 
 
-char save_buf[2000];	/* buffer for SQL command */
-char *savebp;		/* current buffer pointer */
-char * nameref[200];
-int namecnt;
-char * tablenames[200];
-char * tbl_aliases[200];
+//char save_buf[2000];	/* buffer for SQL command */
+//char *savebp;		/* current buffer pointer */
+//char * nameref[200];
+//int namecnt;
+QStringList tablenames;
+QStringList tbl_aliases;
 
-char * sel_tables[200];
-char * sel_columns[200];
+QStringList sel_tables;
+QStringList sel_columns;
 
 
-char * wh_columns_l[200];
-char * wh_columns_r[200];
+QStringList wh_columns_l;
+QStringList wh_columns_r;
 
-char * wh_tables_l[200];
-char * wh_tables_r[200];
+QStringList wh_tables_l;
+QStringList wh_tables_r;
 
-int wh_optypes[200];
+QList<int> wh_optypes;
 
 int current_optype;
 
@@ -58,24 +55,24 @@ char *varnames[NPARAM];	/* parameter names */
 
 /* start an embedded command after EXEC SQL */
 
-void save_table(char * table,char * alias)
+void save_table(QString * table,QString * alias)
 {
- tablenames[tablenamecnt] =  table;
- tbl_aliases[tablenamecnt] = alias;
- tablenamecnt++;
+ tablenames.append(*table);  ;
+ tbl_aliases.append(* alias);
+
 }
 
 
 
-void save_wh_cols_r(char * table,char * column)
+void save_wh_cols_r(QString * table,QString * column)
 
 {
 
 
-     wh_tables_r[wh_col_count] = table;
-     wh_columns_r[wh_col_count] = column;
-wh_optypes[wh_col_count] =  current_optype;
-    wh_col_count++;
+     wh_tables_r.append(* table);
+     wh_columns_r.append(* column);
+wh_optypes.append( current_optype);
+
 
 
 
@@ -84,7 +81,7 @@ wh_optypes[wh_col_count] =  current_optype;
 }
 
 
-void save_wh_cols_l(char * table,char * column)
+void save_wh_cols_l(QString * table,QString * column)
 
 {
 
@@ -92,13 +89,13 @@ void save_wh_cols_l(char * table,char * column)
     {
         if(!saved_columns)
        {
-        wh_tables_l[wh_col_count] = table;
-        wh_columns_l[wh_col_count] = column;
+        wh_tables_l.append(* table);
+        wh_columns_l.append(* column);
        }
         else
         {
            if(saved_columns == 1)
-            save_wh_cols_r( table, column);
+            save_wh_cols_r(  table, column);
         }
         saved_columns++;
 
@@ -111,15 +108,15 @@ void save_wh_cols_l(char * table,char * column)
 
 
 
-void save_sel_cols(char * table,char * column)
+void save_sel_cols(QString * table,QString * column)
 {
 if( is_sel){
-    sel_tables[sel_col_count] = table;
-    sel_columns[sel_col_count]= column;
+    sel_tables.append(* table);
+    sel_columns.append(* column);
 
- sel_col_count++;
+
 }
-else save_wh_cols_l(table,column);
+else save_wh_cols_l( table, column);
 
 }
 
@@ -133,37 +130,37 @@ saved_columns = 0;
 }
 
 
-void save_comparison(char * operation)
+void save_comparison(QString * operation)
 {
 
 current_optype = 6;
 
-if(strcmp(operation,"="))
+if( * operation ==  "=")
 {
     current_optype = 0;
 return;
 }
-if(strcmp(operation,"<>"))
+if( * operation ==  "<>")
  {
     current_optype = 1;
 return;
 }
-if(strcmp(operation,"<"))
+if( * operation ==  "<")
  {
     current_optype = 2;
 return;
 }
-if(strcmp(operation,">"))
+if( * operation ==  ">")
  {
     current_optype = 3;
 return;
 }
-if(strcmp(operation,"<="))
+if( * operation ==  "<=")
  {
     current_optype = 4;
 return;
 }
-if(strcmp(operation,">="))
+if( * operation ==  ">=")
 
     current_optype = 5;
 
@@ -181,12 +178,9 @@ if(strcmp(operation,">="))
 void start_save(void)
 {
 
-    savebp = save_buf;
-    namecnt=0;
-    tablenamecnt=0;
-    sel_col_count = 0;
+ saved_columns =0;
     is_sel = 0;
-    wh_col_count=0;
+
 } /* start_save */
 
 /* save a SQL token */
@@ -209,14 +203,10 @@ void enable_sel(int sel)
 
 }
 
-char * save_str(char *s)
+QString * save_str(char *s)
 {
-    char * retch;
-
-retch = savebp;
-    strcpy(savebp, s);
-    savebp += strlen(s)+1;
-return retch;
+    QString * retstr = new QString(s);
+    return retstr;
 } /* save_str */
 
 /* save a parameter reference */
@@ -256,13 +246,10 @@ void save_param(char *n)
 
 
 
-#ifdef __cplusplus
-}
-#endif
 
 
 
-extern "C" int  yyparse();
+extern  int  yyparse();
 
 QStringList load_list_from_arr(char * arr[],int count )
 {
@@ -320,20 +307,12 @@ tlist.append( scene->addtable(tables->at(tableind)  ));
  if(tableind<0)
      return 2;
 
- QStringList tablesl = load_list_from_arr(tablenames,tablenamecnt);
-QStringList tab_aliases = load_list_from_arr(tbl_aliases,tablenamecnt);
+
 
 
  if(wh_col_count > 0)
    {
-     QStringList left_cols_tables
-             = load_list_from_arr(wh_tables_l,wh_col_count);
-     QStringList left_cols
-             = load_list_from_arr(wh_columns_l,wh_col_count);
-     QStringList right_cols_tables
-             = load_list_from_arr(wh_tables_r,wh_col_count);
-     QStringList right_cols
-             = load_list_from_arr(wh_columns_r,wh_col_count);
+
 
 
      for(int i=0;i<wh_col_count;i++ )
@@ -348,33 +327,33 @@ QStringList tab_aliases = load_list_from_arr(tbl_aliases,tablenamecnt);
   int right_item_ind;
 
 
-      left_item_ind = tablesl.indexOf(left_cols_tables[i]);
+      left_item_ind = tablenames.indexOf(wh_tables_l[i]);
 
              if( left_item_ind >= 0 )
 
                 left_ctable  = tables->at(tableindexes[left_item_ind]);
              else
              {
-                left_item_ind = tab_aliases.indexOf(left_cols_tables[i]);
+                left_item_ind = tbl_aliases.indexOf(wh_tables_l[i]);
                if(left_item_ind >= 0)
                   left_ctable  = tables->at(tableindexes[left_item_ind]);
              }
    if(left_ctable)
-         left_cfield = left_ctable->fields.indexOf(left_cols.at(i));
+         left_cfield = left_ctable->fields.indexOf(wh_columns_l[i]);
 
-   right_item_ind = tablesl.indexOf(right_cols_tables[i]);
+   right_item_ind = tablenames.indexOf(wh_tables_r[i]);
 
                 if( right_item_ind >= 0 )
 
                    right_ctable  = tables->at(tableindexes[right_item_ind]);
                 else
                 {
-                 right_item_ind = tab_aliases.indexOf(right_cols_tables[i]);
+                 right_item_ind = tbl_aliases.indexOf(wh_tables_r[i]);
                   if(right_item_ind >= 0)
                      right_ctable  = tables->at(tableindexes[right_item_ind]);
                 }
       if(right_ctable)
-            right_cfield = right_ctable->fields.indexOf(right_cols.at(i));
+            right_cfield = right_ctable->fields.indexOf(wh_columns_r[i]);
 
       if(right_ctable != 0 && left_ctable != 0 && right_cfield >= 0 && left_cfield >=0  )
        {
@@ -427,14 +406,14 @@ QStringList tab_aliases = load_list_from_arr(tbl_aliases,tablenamecnt);
 
        int left_item_ind;
 
-     left_item_ind = tablesl.indexOf(QString(sel_tables[i]));
+     left_item_ind = tablenames.indexOf(QString(sel_tables[i]));
 
             if( left_item_ind >= 0 )
 
                left_ctable  = tables->at(tableindexes[left_item_ind]);
             else
             {
-               left_item_ind = tab_aliases.indexOf(QString(sel_tables[i]).toUpper());
+               left_item_ind = tbl_aliases.indexOf(QString(sel_tables[i]).toUpper());
               if(left_item_ind >= 0)
                  left_ctable  = tables->at(tableindexes[left_item_ind]);
             }
