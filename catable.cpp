@@ -139,34 +139,40 @@ ttype = TTYPE_ABSTRACT;
 }
 
 
+void catable::movetable( QPointF point)
+{
+
+    setTransform(QTransform::fromTranslate(point.x(), point.y()), true);
+
+//moveline_array(usedarguments,point);
+    foreach(QGraphicsItem * item,scene()->items())
+    {
+        if((item->type() & TTYPE_LINK) == TTYPE_LINK )
+        {
+
+            calink * link = static_cast<calink *>(item);
+
+
+                   moveoneline( link ,  point);
+
+
+
+
+
+        }
+
+    }
+
+}
+
+
 void catable::mouseMoveEvent ( QGraphicsSceneMouseEvent * event )
 {
     QPointF point =  event->pos()+dpressed;
  //   this->translate(point.x(),point.y());
 //     setPos(point.x(),point.y());
-     setTransform(QTransform::fromTranslate(point.x(), point.y()), true);
 
- //moveline_array(usedarguments,point);
-     foreach(QGraphicsItem * item,scene()->items())
-     {
-         if((item->type() & TTYPE_LINK) == TTYPE_LINK )
-         {
-
-             calink * link = static_cast<calink *>(item);
-             {
-                 if(link->p1 == this)
-                    moveoneline( link , 1 , point);
-                 if(link->p2 == this)
-                    moveoneline( link , 0 , point);
-
-             }
-
-
-
-         }
-
-     }
-
+movetable(  point);
 
 
 }
@@ -179,11 +185,11 @@ void catable::set_type(int type)
 
 
 
-void catable::moveoneline(calink * link , int firstpoint ,QPointF point)
+void catable::moveoneline(calink * link , QPointF point)
 {
 
 catable * remote_table = link->p1;
-    if(firstpoint)
+    if(link->p1 == this)
         remote_table = link->p2;
 
     qreal pbefore = remote_table->scenePos().x()-ppressed.x();
@@ -210,7 +216,7 @@ xdifo = -remote_table->defaultwidth;
 
 
 
-  if(firstpoint)
+  if(link->p1 == this)
        p1 = line.p1();
   else
    p1 = line.p2();
@@ -220,7 +226,7 @@ xdifo = -remote_table->defaultwidth;
   if(xdiff!=0 )
 {
 
-      if(firstpoint)
+      if(link->p1 == this)
       line.setP2(line.p2()+QPointF( xdifo,0));
       else
         line.setP1(line.p1()+QPointF( xdifo,0));
@@ -232,7 +238,7 @@ xdifo = -remote_table->defaultwidth;
   }
 
   p1 += point;
- if(firstpoint)
+ if(link->p1 == this)
   line.setP1(p1);
 else
    line.setP2(p1);

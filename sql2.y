@@ -1,7 +1,7 @@
 	/* symbolic tokens */
 %{
 
-//#include <QtDebug>
+//#include <QString>
 
 char * tablenames[300];
 int tablecount=0;
@@ -55,15 +55,19 @@ void yyerror(const char *s);
 %left '*' '/'
 %nonassoc UMINUS
 
+//%right CURSOR ORDER_BY
+
+
+
 	/* literal keyword tokens */
 
-%token ALL ANY AS ASC AUTHORIZATION BETWEEN BY
+%token ALL ANY ARG_REF AS ASC AUTHORIZATION BETWEEN BY
 %token CHARACTER CHECK CLOSE CONCATE  COMMIT  CONTINUE CREATE CURRENT
 %token CURSOR DECIMAL DECLARE DEFAULT DELETE DESC DISTINCT DOUBLE
 %token ESCAPE EXISTS FETCH FLOAT FOR FOREIGN FOUND FROM GOTO
 %token GRANT GROUP HAVING IN INDICATOR INSERT INTEGER INTO
 %token IS KEY LANGUAGE LIKE NULLX NUMERIC OF ON OPEN OPTION
-%token ORDER PARAMETER PRECISION PRIMARY PRIVILEGES PROCEDURE
+%token ORDER_BY PARAMETER PRECISION PRIMARY PRIVILEGES PROCEDURE
 %token PUBLIC REAL REFERENCES ROLLBACK SCHEMA SELECT SET
 %token SMALLINT SOME SQLCODE SQLERROR TABLE TO UNION
 %token UNIQUE UPDATE USER VALUES VIEW WHENEVER WHERE WITH WORK
@@ -239,13 +243,15 @@ sql:
 
 
 cursor_def:
-		DECLARE cursor CURSOR FOR query_exp opt_order_by_clause
+                DECLARE cursor CURSOR FOR query_exp
 	;
 
-opt_order_by_clause:
-		/* empty */
-	|	ORDER BY ordering_spec_commalist
-	;
+
+
+
+
+
+
 
 ordering_spec_commalist:
 		ordering_spec
@@ -253,8 +259,8 @@ ordering_spec_commalist:
 	;
 
 ordering_spec:
-		INTNUM opt_asc_desc
-	|	column_ref opt_asc_desc
+                scalar_exp opt_asc_desc
+//	|	column_ref opt_asc_desc
 	;
 
 opt_asc_desc:
@@ -378,8 +384,19 @@ target:
 
 opt_where_clause:
 		/* empty */
-	|	where_clause
+        |	where_clause
+  //      |   where_clause  ORDER_BY ordering_spec_commalist
 	;
+order_by_clause:
+        ORDER_BY ordering_spec_commalist
+        ;
+
+opt_order_by_clause:
+                /* empty */
+        |	order_by_clause
+        ;
+
+
 
 	/* query expressions */
 
@@ -404,10 +421,14 @@ selection:
  ;
 
 table_exp:
-		from_clause
-		opt_where_clause
-		opt_group_by_clause
-		opt_having_clause
+       //  from_clause
+     //    | from_clause where_clause opt_order_by_clause
+   //      | from_clause where_clause order_by_clause
+      //    from_clause opt_where_clause opt_order_by_clause
+        from_clause opt_where_clause opt_order_by_clause opt_group_by_clause  opt_having_clause
+
+
+
 	;
 
 from_clause:
@@ -545,8 +566,14 @@ scalar_exp:
 	|	'(' scalar_exp ')'
 	;
 
+func_arg_ref:
+        NAME ARG_REF scalar_exp
+        ;
+
 scalar_exp_commalist:
-		scalar_exp
+                func_arg_ref
+        |	scalar_exp
+        |       scalar_exp_commalist ',' func_arg_ref
 	|	scalar_exp_commalist ',' scalar_exp
 	;
 
@@ -581,12 +608,23 @@ function_ref:
 	|	AMMSC '(' ALL scalar_exp ')'
 	|	AMMSC '(' scalar_exp_commalist ')'
         |       ADD_MONTHS '(' scalar_exp ',' scalar_exp ')'
+        |       package_function
 	;
+/*
+package_function_alias:
+               package_function
+        |      package_function NAME
+        ;
+*/
+
+package_function: NAME '.' NAME '(' scalar_exp_commalist ')'
+        ;
 
 literal:
 		STRING
 	|	INTNUM
 	|	APPROXNUM
+        |       NULLX
 	;
 
 	/* miscellaneous */

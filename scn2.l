@@ -232,7 +232,7 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>(?i:OPEN)		TOK(OPEN)
 <SQL>(?i:OPTION)		TOK(OPTION)
 <SQL>(?i:OR)			TOK(OR)
-<SQL>(?i:ORDER)		TOK(ORDER)
+<SQL>(?i:ORDER[ \t]*BY)		TOK(ORDER_BY)
 <SQL>(?i:PRECISION)		TOK(PRECISION)
 <SQL>(?i:PRIMARY)		TOK(PRIMARY)
 <SQL>(?i:PRIVILEGES)		TOK(PRIVILEGES)
@@ -268,6 +268,12 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>">"	|
 <SQL>"<="	|
 <SQL>">="	    {save_comparison(yytext); return COMPARISON;}
+
+
+<SQL>"=>" {return ARG_REF;}
+
+
+
 
 <SQL>[-+*/(),.;]	TOK(yytext[0])
 
@@ -318,6 +324,9 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 		} else
 			yymore();
 	}
+
+
+
 		
 <SQL>'[^'\n]*$	{	yyerror("Unterminated string"); }
 
@@ -328,8 +337,28 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 
 <SQL>"--".*	;	/* comment */
 
+<SQL>"/*"			{ comment(); }
+
 .		ECHO;	/* random non-SQL text */
 %%
+
+void comment()
+{
+    char c, c1;
+
+loop:
+    while ((c = input()) != '*' && c != 0)
+        putchar(c);
+
+    if ((c1 = input()) != '/' && c != 0)
+    {
+        unput(c1);
+        goto loop;
+    }
+
+    if (c != 0)
+        putchar(c1);
+}
 
 
 

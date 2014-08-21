@@ -29,11 +29,11 @@ int colcount;
    QPointF dpressed;
   QPointF ppressed;
  int ttype;
-
+void movetable( QPointF point);
   void set_column_type(int colnum,int coltype);
    void set_column_types(QList<int> coltypes);
 
-  void moveoneline(calink *link , int firstpoint, QPointF point);
+  void moveoneline(calink *link , QPointF point);
   void set_type(int type);
   int type() const
     {

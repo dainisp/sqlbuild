@@ -39,7 +39,7 @@ QMAKE_EXTRA_COMPILERS += flexheader
 
 bisonsource.input = BISONSOURCES
 bisonsource.output = ${QMAKE_FILE_BASE}.c
-bisonsource.commands = bison -t -d --defines=${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_BASE}.c ${QMAKE_FILE_IN}
+bisonsource.commands = bison -t -v -d --defines=${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_BASE}.c ${QMAKE_FILE_IN}
 bisonsource.variable_out = SOURCES
 bisonsource.name = Bison Sources ${QMAKE_FILE_IN}
 bisonsource.CONFIG += target_predeps
