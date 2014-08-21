@@ -10,6 +10,11 @@ int lineno = 1;
 
 #define TOK(name) { return name; }
 extern void yyerror(const char *s);
+extern char * save_str(char *s);
+extern void start_save();
+extern void save_comparison(char * operation);
+
+
 
 %}
 
@@ -316,7 +321,7 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 	/* strings */
 
 <SQL>'[^'\n]*'	{
-                int c = input();
+                int c = yyinput();
 
 		unput(c);	/* just peeking */
 		if(c != '\'') {
@@ -337,28 +342,24 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 
 <SQL>"--".*	;	/* comment */
 
-<SQL>"/*"			{ comment(); }
-
-.		ECHO;	/* random non-SQL text */
-%%
-
-void comment()
-{
-    char c, c1;
+<SQL>"/*"			{   char c, c1;
 
 loop:
-    while ((c = input()) != '*' && c != 0)
+    while ((c = yyinput()) != '*' && c != 0)
         putchar(c);
 
-    if ((c1 = input()) != '/' && c != 0)
+    if ((c1 = yyinput()) != '/' && c != 0)
     {
         unput(c1);
         goto loop;
     }
 
     if (c != 0)
-        putchar(c1);
-}
+        putchar(c1); }
+
+.		ECHO;	/* random non-SQL text */
+%%
+
 
 
 

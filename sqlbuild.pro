@@ -16,8 +16,8 @@ OTHER_FILES +=  \
     $$BISONSOURCES
 
 flexsource.input = FLEXSOURCES
-flexsource.output = ${QMAKE_FILE_BASE}.c
-flexsource.commands = flex --header-file=${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_BASE}.c ${QMAKE_FILE_IN}
+flexsource.output = ${QMAKE_FILE_BASE}.cpp
+flexsource.commands = flex --header-file=${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_BASE}.cpp ${QMAKE_FILE_IN}
 flexsource.variable_out = SOURCES
 flexsource.name = Flex Sources ${QMAKE_FILE_IN}
 flexsource.CONFIG += target_predeps
@@ -38,8 +38,8 @@ flexheader.CONFIG += target_predeps no_link
 QMAKE_EXTRA_COMPILERS += flexheader
 
 bisonsource.input = BISONSOURCES
-bisonsource.output = ${QMAKE_FILE_BASE}.c
-bisonsource.commands = bison -t -v -d --defines=${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_BASE}.c ${QMAKE_FILE_IN}
+bisonsource.output = ${QMAKE_FILE_BASE}.cpp
+bisonsource.commands = bison -t -v -d --defines=${QMAKE_FILE_BASE}.h -o ${QMAKE_FILE_BASE}.cpp ${QMAKE_FILE_IN}
 bisonsource.variable_out = SOURCES
 bisonsource.name = Bison Sources ${QMAKE_FILE_IN}
 bisonsource.CONFIG += target_predeps
