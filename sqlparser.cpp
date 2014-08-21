@@ -57,8 +57,8 @@ char *varnames[NPARAM];	/* parameter names */
 
 void save_table(QString * table,QString * alias)
 {
- tablenames.append(*table);  ;
- tbl_aliases.append(* alias);
+ tablenames.append(table->toUpper());  ;
+ tbl_aliases.append(alias->toUpper());
 
 }
 
@@ -69,8 +69,8 @@ void save_wh_cols_r(QString * table,QString * column)
 {
 
 
-     wh_tables_r.append(* table);
-     wh_columns_r.append(* column);
+     wh_tables_r.append( table->toUpper());
+     wh_columns_r.append( column->toUpper());
 wh_optypes.append( current_optype);
 
 
@@ -89,8 +89,8 @@ void save_wh_cols_l(QString * table,QString * column)
     {
         if(!saved_columns)
        {
-        wh_tables_l.append(* table);
-        wh_columns_l.append(* column);
+        wh_tables_l.append( table->toUpper());
+        wh_columns_l.append( column->toUpper());
        }
         else
         {
@@ -111,8 +111,8 @@ void save_wh_cols_l(QString * table,QString * column)
 void save_sel_cols(QString * table,QString * column)
 {
 if( is_sel){
-    sel_tables.append(* table);
-    sel_columns.append(* column);
+    sel_tables.append( table->toUpper());
+    sel_columns.append( column->toUpper());
 
 
 }
@@ -295,8 +295,8 @@ int prez = yyparse();
 tlist.clear();
 
  int tableind;
- if(tablenamecnt>0)
- for(int i=0;i<tablenamecnt;i++)
+ if(tablenames.count()>0)
+ for(int i=0;i<tablenames.count();i++)
  {
 tableind = ctable::findtablebyname(QString(tablenames[i]).toUpper(),tables);
  if(tableind<0)
@@ -310,14 +310,14 @@ tlist.append( scene->addtable(tables->at(tableind)  ));
 
 
 
- if(wh_col_count > 0)
+ if(wh_tables_l.count() > 0)
    {
 
 
 
-     for(int i=0;i<wh_col_count;i++ )
+     for(int i=0;i<wh_tables_l.count();i++ )
  {
-         if(wh_optypes[i] == 1)
+         if(wh_optypes[i] == 0)
      {
   ctable * left_ctable = 0;
   int left_cfield;
@@ -362,12 +362,12 @@ tlist.append( scene->addtable(tables->at(tableind)  ));
        int leftfkey = left_ctable->get_foreign_by_prim_table(right_ctable);
           if(leftfkey >=0 && leftfkey == left_cfield )
                  scene->add_link(tlist.at(left_item_ind),
-                                   tlist.at(right_item_ind),left_cfield,right_cfield,TTYPE_FOREIGN_LINK,true);
+                                   tlist.at(right_item_ind),left_cfield+1,right_cfield+1,TTYPE_FOREIGN_LINK,true);
       else{
            int rightfkey =   right_ctable->get_foreign_by_prim_table(left_ctable);
            if(rightfkey >=0 && rightfkey == right_cfield )
                   scene->add_link(tlist.at(right_item_ind),
-                                    tlist.at(left_item_ind),right_cfield,left_cfield,TTYPE_FOREIGN_LINK,true);
+                                    tlist.at(left_item_ind),right_cfield+1,left_cfield+1,TTYPE_FOREIGN_LINK,true);
 
 
           }
@@ -398,7 +398,7 @@ tlist.append( scene->addtable(tables->at(tableind)  ));
 
 
 
- for(int i=0;i<sel_col_count;i++ )
+ for(int i=0;i<sel_tables.count();i++ )
 {
 
      ctable * left_ctable = 0;
