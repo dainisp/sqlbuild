@@ -85,6 +85,12 @@ void save_wh_cols_l(QString * table,QString * column)
 
 {
 
+
+  if(!table)
+      table = new QString();
+  if(!column)
+      column = new QString();
+
     if(is_where)
     {
         if(!saved_columns)

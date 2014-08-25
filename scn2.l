@@ -5,7 +5,8 @@
 #include <QString>
 // Also, we must add the parser's header where are defined the tokens.
 #include "sql2.h"
-#define YY_DECL int yylex(void)
+
+#define YY_DECL extern "C" int yylex(void)
 int lineno = 1;
 
 #define TOK(name) { return name; }
