@@ -24,7 +24,6 @@ extern void reset_saved_columns();
 // Bison uses the yyerror function for informing us when a parsing error has
 // occurred.
 
-
 %}
 
 
