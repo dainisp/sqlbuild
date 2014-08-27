@@ -379,7 +379,7 @@ query_term:
         ;
 
 query_spec:
-                SELECT opt_all_distinct selection table_exp
+                SELECT   opt_all_distinct  selection  {enable_sel(0);}  table_exp
         ;
 
 selection:
@@ -404,8 +404,8 @@ table_ref_commalist:
         ;
 
 table_ref:
-                table
-        |	table range_variable
+                table  { save_table( $1 ,new QString() ); }
+        |	table range_variable  { save_table( $1 ,$2 ); }
         ;
 
 where_clause:
@@ -526,16 +526,17 @@ scalar_exp_commalist:
 */
 
 scalar_exp_commalist_for_selection:
-                scalar_exp
-        |       scalar_exp alias
-        |	scalar_exp_commalist_for_selection ',' scalar_exp
+
+               scalar_exp opt_alias
+        |	scalar_exp_commalist_for_selection ',' scalar_exp opt_alias
         ;
 
 
 
 
-alias:
-                NAME
+opt_alias:
+        /* empty */
+         |   NAME
         ;
 
 
