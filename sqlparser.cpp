@@ -45,6 +45,7 @@ QList<QStringList> wh_columns;
 QStringList current_wh_tables;
 QStringList current_wh_columns;
 
+QString current_expression;
 
 QList<int> wh_optypes;
 
@@ -104,7 +105,7 @@ void save_wh_cols(QString * table,QString * column)
     {
      current_wh_tables.append(table->toUpper());
      current_wh_columns.append(column->toUpper());
-
+     current_expression.append(QString(" ?%1").arg(current_wh_tables.count()));
 
     }
 
@@ -126,59 +127,35 @@ else save_wh_cols( table, column);
 
 }
 
+void append_expression(QString * exp)
+{
+ current_expression.append(*exp);
 
+}
 
 void reset_saved_columns()
 {
 wh_tables.append(current_wh_tables);
 wh_columns.append(current_wh_columns);
+wh_expressions.append(current_expression);
 current_wh_tables.clear();
 current_wh_columns.clear();
+current_expression.clear();
 }
 
 
 void save_comparison(QString * operation)
 {
+current_expression.append(operation->prepend(" "));
+}
 
-current_optype = 6;
 
-if( * operation ==  "=")
+void save_comparison_number(int num)
 {
-    current_optype = 0;
-return;
-}
-if( * operation ==  "<>")
- {
-    current_optype = 1;
-return;
-}
-if( * operation ==  "<")
- {
-    current_optype = 2;
-return;
-}
-if( * operation ==  ">")
- {
-    current_optype = 3;
-return;
-}
-if( * operation ==  "<=")
- {
-    current_optype = 4;
-return;
-}
-if( * operation ==  ">=")
-
-    current_optype = 5;
-
-
-
-
+  QString  apstr(QString::number(num));
+  current_expression.append(apstr.prepend(" "));
 
 }
-
-
-
 
 
 
@@ -190,7 +167,10 @@ void start_save(void)
     wh_tables.clear();
     wh_columns.clear();
     wh_expressions.clear();
-
+    tbl_aliases.clear();
+    sel_columns.clear();
+  tablenames.clear();
+  sel_tables.clear();
 } /* start_save */
 
 /* save a SQL token */
@@ -292,7 +272,7 @@ int i = 0;
  if(crtable->tablestring == tablename  || crtable->colnames[0] == tablename  )
    {
      int fieldind = crtlist[i]->table->fields.indexOf(colname);
-     if( fieldind <= 0 )
+     if( fieldind >= 0 )
      {
      * tabindex = i;
      * colindex =fieldind;
@@ -372,6 +352,19 @@ tlist.append( scene->addtable(tables->at(tableind),tbl_aliases[i]));
 int first_field,second_field,first_tab_ind,second_tab_ind;
  findcrtables(tlist,firsttable,firstcol,&first_tab_ind,&first_field);
 
+  if( wh_tables[i].count() == 1)
+  {
+      tlist[first_tab_ind]->set_column_type(first_field+1,CTYPE_WHERE_FIELD);
+
+      tlist[first_tab_ind]->colstrings[first_field+1] = expression;
+
+
+
+  }
+
+
+
+
       if( wh_tables[i].count() == 2 )
      {
 
@@ -386,13 +379,13 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
   {
 
 
-     if(expression == QString("?1 = ?2"))
+     if(expression.trimmed() == QString("?1 = ?2"))
      {
      if(tlist[first_tab_ind]->table->primary == first_field   )
      {
        int foreign_ind = tlist[second_tab_ind]->table->get_foreign_by_prim_table(tlist[first_tab_ind]->table);
                if(foreign_ind == second_field )
-                  scene->add_link(tlist[first_tab_ind],tlist[second_tab_ind],first_field,second_field,TTYPE_FOREIGN_LINK,true);
+                  scene->add_link(tlist[first_tab_ind],tlist[second_tab_ind],first_field+1,second_field+1,TTYPE_FOREIGN_LINK,true);
 
      }
      else
@@ -401,12 +394,12 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
          {
            int foreign_ind = tlist[first_tab_ind]->table->get_foreign_by_prim_table(tlist[second_tab_ind]->table);
                    if(foreign_ind == first_field )
-                      scene->add_link(tlist[second_tab_ind],tlist[first_tab_ind],second_field ,first_field,TTYPE_FOREIGN_LINK,true);
+                      scene->add_link(tlist[second_tab_ind],tlist[first_tab_ind],second_field+1 ,first_field+1,TTYPE_FOREIGN_LINK,true);
 
          }
      else
          {
-         scene->add_link(tlist[first_tab_ind],tlist[second_tab_ind],first_field,second_field,TTYPE_CUSTOM_LINK);
+         scene->add_link(tlist[first_tab_ind],tlist[second_tab_ind],first_field+1,second_field+1,TTYPE_CUSTOM_LINK);
 
          }
 
@@ -419,63 +412,6 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
 
 
 
-
-
-
-/*
-
-      left_item_ind = tablenames.indexOf(wh_tables_l[i]);
-
-             if( left_item_ind >= 0 )
-
-                left_ctable  = tables->at(tableindexes[left_item_ind]);
-             else
-             {
-                left_item_ind = tbl_aliases.indexOf(wh_tables_l[i]);
-               if(left_item_ind >= 0)
-                  left_ctable  = tables->at(tableindexes[left_item_ind]);
-             }
-   if(left_ctable)
-         left_cfield = left_ctable->fields.indexOf(wh_columns_l[i]);
-
-   right_item_ind = tablenames.indexOf(wh_tables_r[i]);
-
-                if( right_item_ind >= 0 )
-
-                   right_ctable  = tables->at(tableindexes[right_item_ind]);
-                else
-                {
-                 right_item_ind = tbl_aliases.indexOf(wh_tables_r[i]);
-                  if(right_item_ind >= 0)
-                     right_ctable  = tables->at(tableindexes[right_item_ind]);
-                }
-      if(right_ctable)
-            right_cfield = right_ctable->fields.indexOf(wh_columns_r[i]);
-
-      */
-
-/*
-      if(right_ctable != 0 && left_ctable != 0 && right_cfield >= 0 && left_cfield >=0  )
-       {
-
-         // get_foreign_by_prim_table
-       int leftfkey = left_ctable->get_foreign_by_prim_table(right_ctable);
-          if(leftfkey >=0 && leftfkey == left_cfield )
-                 scene->add_link(tlist.at(left_item_ind),
-                                   tlist.at(right_item_ind),left_cfield+1,right_cfield+1,TTYPE_FOREIGN_LINK,true);
-      else{
-           int rightfkey =   right_ctable->get_foreign_by_prim_table(left_ctable);
-           if(rightfkey >=0 && rightfkey == right_cfield )
-                  scene->add_link(tlist.at(right_item_ind),
-                                    tlist.at(left_item_ind),right_cfield+1,left_cfield+1,TTYPE_FOREIGN_LINK,true);
-
-
-          }
-
-
-
-      }
-*/
 }
 
 
@@ -497,34 +433,18 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
 
 
 
-/*
+
  for(int i=0;i<sel_tables.count();i++ )
 {
+int table_ind,field_ind;
 
-     ctable * left_ctable = 0;
-     int left_cfield;
+findcrtables(tlist,sel_tables[i],sel_columns[i],&table_ind,&field_ind);
 
-       int left_item_ind;
-
-     left_item_ind = tablenames.indexOf(QString(sel_tables[i]));
-
-            if( left_item_ind >= 0 )
-
-               left_ctable  = tables->at(tableindexes[left_item_ind]);
-            else
-            {
-               left_item_ind = tbl_aliases.indexOf(QString(sel_tables[i]).toUpper());
-              if(left_item_ind >= 0)
-                 left_ctable  = tables->at(tableindexes[left_item_ind]);
-            }
-  if(left_ctable)
-
-        left_cfield = left_ctable->fields.indexOf(QString(sel_columns[i]).toUpper());
-if(left_cfield >= 0 )
-  tlist.at(left_item_ind)->set_column_type(left_cfield+1,CTYPE_OUTPUTFIELD);
+if(table_ind  >= 0 )
+  tlist.at(table_ind)->set_column_type(field_ind+1,CTYPE_OUTPUTFIELD);
 
  }
-*/
+
 
 
 return 0;

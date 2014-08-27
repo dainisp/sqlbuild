@@ -13,7 +13,7 @@ int lineno = 1;
 extern void yyerror(const char *s);
 extern QString * save_str(char *s);
 extern void start_save();
-extern void save_comparison(QString * operation);
+//extern void save_comparison(QString * operation);
 
 
 
@@ -273,7 +273,7 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>"<"	|
 <SQL>">"	|
 <SQL>"<="	|
-<SQL>">="	    {  save_comparison(save_str(yytext)); return COMPARISON;}
+<SQL>">="	    {  yylval.strval = save_str(yytext); return COMPARISON;}
 
 
 <SQL>"=>" {return ARG_REF;}
@@ -308,7 +308,7 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
     // parse.
     //yylval.QVariant_t = new QVariant();
   //  *yylval.QVariant_t = QString(yytext).toInt();
-
+ yylval.strval =  save_str(yytext);
   return INTNUM;
 }
 

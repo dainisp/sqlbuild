@@ -20,6 +20,9 @@ extern void save_table(QString * table,QString * alias);
 extern void save_sel_cols(QString * table,QString * column);
 extern void enable_where(int where);
 extern void reset_saved_columns();
+extern void save_comparison(QString * operation);
+extern void save_comparison_number(int num);
+//extern void append_expression(QString * exp);
 
 // Bison uses the yyerror function for informing us when a parsing error has
 // occurred.
@@ -39,7 +42,7 @@ extern void reset_saved_columns();
 
 
 // Define the terminal expression types.
-%token <intval> INTNUM
+%token <strval> INTNUM
 
 // Define the non-terminal expression types.
 //%type <QVariant_t> variantListItems
@@ -409,7 +412,7 @@ table_ref:
         ;
 
 where_clause:
-                WHERE search_condition
+                WHERE  { enable_where(1); }   search_condition { reset_saved_columns() }
         ;
 
 opt_group_by_clause:
@@ -431,7 +434,7 @@ opt_having_clause:
 
 search_condition:
         |	search_condition OR search_condition
-        |	search_condition AND search_condition
+        |	search_condition AND { reset_saved_columns() }  search_condition
         |	NOT search_condition
         |	'(' search_condition ')'
         |	predicate
@@ -448,8 +451,8 @@ predicate:
         ;
 
 comparison_predicate:
-                scalar_exp COMPARISON scalar_exp
-        |	scalar_exp COMPARISON subquery
+                scalar_exp COMPARISON { save_comparison($2);} scalar_exp
+        |	scalar_exp COMPARISON  subquery
         ;
 
 between_predicate:
@@ -561,7 +564,7 @@ function_ref:
 
 literal:
                 STRING
-        |	INTNUM
+        |	INTNUM { save_comparison($1);}
         |	APPROXNUM
         ;
 
@@ -573,9 +576,9 @@ table:
         ;
 
 column_ref:
-                NAME
-        |	NAME '.' NAME	/* needs semantics */
-        |	NAME '.' NAME '.' NAME
+                NAME  { save_sel_cols( new QString(), $1 ); }
+        |	NAME '.' NAME	{ save_sel_cols($1, $3 ); }
+        |	NAME '.' NAME '.' NAME  { save_sel_cols( $3, $5 ); }
         ;
 
                 /* data types */

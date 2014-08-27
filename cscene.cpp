@@ -355,7 +355,7 @@ QString selstr;
               }
               else
                {
-               addwhere = " AND " +  table->colstrings[i].replace("?",QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower());
+               addwhere = " AND " +  table->colstrings[i].replace(QRegExp("\\?[0-9]*"),QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower());
               }
 
               if(wherwidth + addwhere.count() > maxrowwidth )
