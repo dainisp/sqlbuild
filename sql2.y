@@ -225,6 +225,10 @@ sql:
         ;
 
 
+sql :
+                query_exp opt_order_by_clause
+        ;
+
 cursor_def:
                 DECLARE cursor CURSOR FOR query_exp opt_order_by_clause
         ;
@@ -513,16 +517,18 @@ scalar_exp:
         |	'(' scalar_exp ')'
         ;
 
+/*
+
 scalar_exp_commalist:
                 scalar_exp
         |	scalar_exp_commalist ',' scalar_exp
         ;
-
+*/
 
 scalar_exp_commalist_for_selection:
                 scalar_exp
         |       scalar_exp alias
-        |	scalar_exp_commalist ',' scalar_exp
+        |	scalar_exp_commalist_for_selection ',' scalar_exp
         ;
 
 
