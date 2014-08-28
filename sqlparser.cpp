@@ -360,6 +360,80 @@ tlist.append( scene->addtable(tables->at(tableind),tbl_aliases[i]));
  if(tableind<0)
      return 2;
 
+ if(sel_tables.count() > 0 )
+ {
+
+     for(int i=0;i<sel_tables.count();i++ )
+ {
+         int tab_ind = -1;
+         if(sel_tables[i].count() == 1)
+        {
+          int col_ind;
+             findcrtables(tlist,sel_tables[i][0],sel_columns[i][0],&tab_ind,&col_ind);
+             if( tab_ind >=0 )
+             {
+                 tlist[tab_ind]->set_column_type(col_ind+1,CTYPE_OUTPUTFIELD);
+
+                 tlist[tab_ind]->colstrings[col_ind+1] = sel_expressions[i];
+
+
+             }
+
+
+
+         }
+
+         if(tab_ind < 0 )
+        {
+
+
+
+
+             QStringList colnames =  sel_columns[i];
+             QString expression = sel_expressions[i];
+             if(sel_aliases[i].isEmpty())
+             colnames.prepend(QString("Out%1").arg(expreslist.count()+1));
+             else
+                {
+               colnames.prepend(sel_aliases[i]);
+               expression += " " + sel_aliases[i];
+             }
+
+             cexpritem * expritem  = new  cexpritem(expression , colnames);
+                     expritem->set_type( TTYPE_EXPRESSION_SELECT);
+                     expritem->typecolors[CTYPE_HEADER] = Qt::yellow;
+                   expreslist.append(expritem);
+                  scene->addItem(expritem);
+
+                  for(int j=0;j<sel_tables[i].count();j++)
+                  {
+                 int tab_ind,col_ind;
+                 findcrtables(tlist,sel_tables[i][j],sel_columns[i][j],&tab_ind,&col_ind);
+                 if(tab_ind >=0)
+                   {
+                     scene->add_link(expritem,tlist[tab_ind],j+1,col_ind+1,TTYPE_CUSTOM_LINK);
+
+                 }
+                 else
+                 {
+                     expritem->expression = expritem->expression.replace(QString("?%1").arg(j),sel_columns[i][j]);
+
+                 }
+
+
+                  }
+
+
+
+         }
+
+
+
+
+
+  }
+
+ }
 
 
 
@@ -456,6 +530,8 @@ QStringList colnames =  wh_columns[i];
 colnames.prepend(QString("Expr%1").arg(expreslist.count()+1));
 
           cexpritem * expritem  = new  cexpritem(expression, colnames);
+         expritem->set_type( TTYPE_EXPRESSION_WHERE);
+              expritem->typecolors[CTYPE_HEADER] = Qt::magenta;
           expreslist.append(expritem);
      scene->addItem(expritem);
 

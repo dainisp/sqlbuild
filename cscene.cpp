@@ -427,16 +427,18 @@ QString selstr;
            catable * expr;
            crtableitem * table;
            int tabcol,exprcol;
+           int exprtype;
              if(link->p1->type() == TTYPE_EXPRESSION )
            {
               expr = link->p1;
-
+        exprtype = link->p1->type();
               table = static_cast< crtableitem * >(link->p2);
           exprcol = link->cols1;
           tabcol = link->cols2;
              }
            else
           {
+                  exprtype = link->p2->type();
                  expr = link->p2;
                  table = static_cast< crtableitem * >(link->p1);
              exprcol = link->cols2;
@@ -449,6 +451,8 @@ QString selstr;
         exprmap[expr] = exprmap[expr].replace("?" + QString::number(exprcol),table->tablestring + "." + table->colnames[tabcol]  );
         if(exprmap[expr].indexOf("?")<0)
         {
+            if( (exprtype  & TTYPE_EXPRESSION_WHERE)  == TTYPE_EXPRESSION_WHERE   )
+         {
         QString addwhere = QString(" AND ")  + exprmap[expr];
 
         if(wherwidth + addwhere.count() > maxrowwidth )
@@ -462,6 +466,26 @@ QString selstr;
          wherwidth +=  addwhere.length();
             wherstr +=  addwhere;
         }
+
+        }
+       else
+            {
+           QString addwhere = QString(",")  + exprmap[expr];
+
+           if(selwidth + addwhere.count() > maxrowwidth )
+              {
+
+               selwidth = addwhere.length();
+               selstr += "\n" + addwhere;
+           }
+           else
+           {
+            selwidth +=  addwhere.length();
+               selstr +=  addwhere;
+           }
+
+           }
+
 
 
         }
