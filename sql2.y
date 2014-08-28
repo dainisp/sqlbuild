@@ -22,6 +22,7 @@ extern void enable_where(int where);
 extern void reset_saved_columns();
 extern void save_comparison(QString * operation);
 extern void save_comparison_number(int num);
+extern void reset_saved_sel_columns(QString * alias);
 //extern void append_expression(QString * exp);
 
 // Bison uses the yyerror function for informing us when a parsing error has
@@ -54,7 +55,7 @@ extern void save_comparison_number(int num);
 %token APPROXNUM
 
 
-%type <strval> table table_ref column column_ref range_variable
+%type <strval> table table_ref column column_ref range_variable opt_alias
 
 
         /* operators */
@@ -63,7 +64,7 @@ extern void save_comparison_number(int num);
 %left AND
 %left NOT
 %left <strval> COMPARISON AMMSC ADD_MONTHS
-%left '+' '-' CONCATE
+%left  <strval>  '+' '-' CONCATE
 %left '*' '/'
 %nonassoc UMINUS
 
@@ -508,8 +509,9 @@ subquery:
         /* scalar expressions */
 
 scalar_exp:
-                scalar_exp '+' scalar_exp
+                scalar_exp '+' { save_comparison($2);} scalar_exp
         |	scalar_exp '-' scalar_exp
+        |       scalar_exp CONCATE { save_comparison($2);}  scalar_exp
         |	scalar_exp '*' scalar_exp
         |	scalar_exp '/' scalar_exp
         |	'+' scalar_exp %prec UMINUS
@@ -530,7 +532,7 @@ scalar_exp_commalist:
 
 scalar_exp_commalist_for_selection:
 
-               scalar_exp opt_alias
+               scalar_exp opt_alias { reset_saved_sel_columns($2); }
         |	scalar_exp_commalist_for_selection ',' scalar_exp opt_alias
         ;
 
@@ -538,7 +540,7 @@ scalar_exp_commalist_for_selection:
 
 
 opt_alias:
-        /* empty */
+        /* empty */ { $$ = new QString(); }
          |   NAME
         ;
 

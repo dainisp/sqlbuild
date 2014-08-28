@@ -276,14 +276,14 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>">="	    {  yylval.strval = save_str(yytext); return COMPARISON;}
 
 
-<SQL>"=>" {return ARG_REF;}
+<SQL>"=>" { yylval.strval =  save_str(yytext);  return ARG_REF;}
 
 
 
 
-<SQL>[-+*/(),.;]	TOK(yytext[0])
+<SQL>[-+*/(),.;]	{ yylval.strval =  save_str(yytext);    return yytext[0]; }
 
-<SQL>"\|\|"   { return CONCATE;}
+<SQL>"\|\|"   {  yylval.strval =  save_str(yytext);  return CONCATE;}
 
 
 	/* names */

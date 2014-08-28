@@ -28,9 +28,15 @@ extern char * errorstr;
 QStringList tablenames;
 QStringList tbl_aliases;
 
-QStringList sel_tables;
-QStringList sel_columns;
+QList<QStringList> sel_tables;
+QList<QStringList> sel_columns;
+QStringList sel_expressions;
+QStringList sel_aliases;
 QStringList wh_expressions;
+QStringList current_sel_tables;
+QStringList current_sel_columns;
+QString current_sel_expression;
+
 /*
 QStringList wh_columns_l;
 QStringList wh_columns_r;
@@ -53,7 +59,7 @@ int current_optype;
 
 
 int tablenamecnt;
-int sel_col_count;
+//int sel_col_count;
 //int wh_col_count;
 int is_sel;
 int is_where;
@@ -119,8 +125,9 @@ void save_wh_cols(QString * table,QString * column)
 void save_sel_cols(QString * table,QString * column)
 {
 if( is_sel){
-    sel_tables.append( table->toUpper());
-    sel_columns.append( column->toUpper());
+    current_sel_tables.append( table->toUpper());
+    current_sel_columns.append( column->toUpper());
+    current_sel_expression.append(QString(" ?%1").arg(current_sel_tables.count()));
 }
 
 else save_wh_cols( table, column);
@@ -143,11 +150,27 @@ current_wh_columns.clear();
 current_expression.clear();
 }
 
+void reset_saved_sel_columns(QString * alias)
+{
+sel_columns.append(current_sel_columns);
+sel_tables.append(current_sel_tables);
+sel_expressions.append(current_sel_expression);
+sel_aliases.append(* alias);
+current_sel_columns.clear();
+current_sel_tables.clear();
+current_sel_expression.clear();
+
+}
 
 void save_comparison(QString * operation)
 {
+    if(is_where)
 current_expression.append(operation->prepend(" "));
+    else
+     current_sel_expression.append(operation->prepend(" "));
 }
+
+
 
 
 void save_comparison_number(int num)
@@ -171,6 +194,12 @@ void start_save(void)
     sel_columns.clear();
   tablenames.clear();
   sel_tables.clear();
+  sel_expressions.clear();
+  current_sel_columns.clear();
+  current_sel_tables.clear();
+  current_sel_expression.clear();
+sel_aliases.clear();
+
 } /* start_save */
 
 /* save a SQL token */
@@ -315,6 +344,7 @@ int prez = yyparse();
    return prez;
  QList<int> tableindexes;
   QList< crtableitem * > tlist;
+    QList<cexpritem * > expreslist;
 tlist.clear();
 
  int tableind;
@@ -416,8 +446,43 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
 
 
 
+     }else
+         {
+
+
+
+QStringList colnames =  wh_columns[i];
+
+colnames.prepend(QString("Expr%1").arg(expreslist.count()+1));
+
+          cexpritem * expritem  = new  cexpritem(expression, colnames);
+          expreslist.append(expritem);
+     scene->addItem(expritem);
+
+     for(int j=0;j<wh_tables[i].count();j++)
+     {
+    int tab_ind,col_ind;
+    findcrtables(tlist,wh_tables[i][j],wh_columns[i][j],&tab_ind,&col_ind);
+    if(tab_ind >=0)
+      {
+        scene->add_link(expritem,tlist[tab_ind],j+1,col_ind+1,TTYPE_CUSTOM_LINK);
+
+    }
+    else
+    {
+        expritem->expression = expritem->expression.replace(QString("?%1").arg(j),wh_columns[i][j]);
+
+    }
+
+
      }
 
+ }
+
+
+
+
+
 
  }
 
@@ -433,7 +498,7 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
 
 
 
-
+/*
  for(int i=0;i<sel_tables.count();i++ )
 {
 int table_ind,field_ind;
@@ -445,7 +510,7 @@ if(table_ind  >= 0 )
 
  }
 
-
+*/
 
 return 0;
 }
