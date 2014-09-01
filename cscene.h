@@ -38,6 +38,8 @@ void savel_to_stream(QDataStream * stream, QList<catable *> tlist);
 //void place_tables(QList < csertable * > sertables, QList<ctable *> alltables);
 void add_link(catable *first, catable *second, int firstcol, int secondcol,
               int type = TTYPE_LINK , bool directed = false);
+QString export_allt_to_graphml();
+void arrange_tables();
 crtableitem * find_primary_table(ctable * table);
 bool add_selected_link();
 //void findprimary(ctableitem * pitem);

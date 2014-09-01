@@ -50,12 +50,11 @@ extern void reset_saved_sel_columns(QString * alias);
 
 
 
-%token <strval> NAME
-%token STRING
+%token <strval> NAME ARG_REF  STRING
 %token APPROXNUM
 
 
-%type <strval> table table_ref column column_ref range_variable opt_alias
+%type <strval> table table_ref column column_ref range_variable opt_alias parameter
 
 
         /* operators */
@@ -63,23 +62,23 @@ extern void reset_saved_sel_columns(QString * alias);
 %left OR
 %left AND
 %left NOT
-%left <strval> COMPARISON AMMSC ADD_MONTHS
+%left <strval> COMPARISON AMMSC AMMSCF ADD_MONTHS PARAMETER
 %left  <strval>  '+' '-' CONCATE
-%left '*' '/'
+%left  <strval>   '*' '/'
 %nonassoc UMINUS
 
 
-
+%token <strval> '(' ')'
 
         /* literal keyword tokens */
 
-%token ALL ANY ARG_REF AS ASC AUTHORIZATION BETWEEN BY
+%token ALL ANY AS ASC AUTHORIZATION BETWEEN BY
 %token CHARACTER CHECK CLOSE CONCATE  COMMIT  CONTINUE CREATE CURRENT
 %token CURSOR DECIMAL DECLARE DEFAULT DELETE DESC DISTINCT DOUBLE
 %token ESCAPE EXISTS FETCH FLOAT FOR FOREIGN FOUND FROM GOTO
 %token GRANT GROUP HAVING IN INDICATOR INSERT INTEGER INTO
 %token IS KEY LANGUAGE LIKE NULLX NUMERIC OF ON OPEN OPTION
-%token ORDER PARAMETER PRECISION PRIMARY PRIVILEGES PROCEDURE
+%token ORDER PRECISION PRIMARY PRIVILEGES PROCEDURE
 %token PUBLIC REAL REFERENCES ROLLBACK SCHEMA SELECT SET
 %token SMALLINT SOME SQLCODE SQLERROR TABLE TO UNION
 %token UNIQUE UPDATE USER VALUES VIEW WHENEVER WHERE WITH WORK
@@ -348,7 +347,7 @@ assignment_commalist:
 
 assignment:
                 column '=' scalar_exp
-        |	column '=' NULLX
+
         ;
 
 update_statement_searched:
@@ -413,7 +412,7 @@ table_ref:
         ;
 
 where_clause:
-                WHERE  { enable_where(1); }   search_condition { reset_saved_columns() }
+                WHERE  { enable_where(1); }   search_condition { reset_saved_columns(); }
         ;
 
 opt_group_by_clause:
@@ -435,7 +434,7 @@ opt_having_clause:
 
 search_condition:
         |	search_condition OR search_condition
-        |	search_condition AND { reset_saved_columns() }  search_condition
+        |	search_condition AND { reset_saved_columns(); }  search_condition
         |	NOT search_condition
         |	'(' search_condition ')'
         |	predicate
@@ -474,18 +473,20 @@ opt_escape:
 test_for_null:
                 column_ref IS NOT NULLX
         |	column_ref IS NULLX
+        |       parameter IS NOT NULLX
+        |      parameter IS NULLX
         ;
 
 in_predicate:
                 scalar_exp NOT IN '(' subquery ')'
         |	scalar_exp IN '(' subquery ')'
-        |	scalar_exp NOT IN '(' atom_commalist ')'
-        |	scalar_exp IN '(' atom_commalist ')'
+        |	scalar_exp NOT IN '('  { save_comparison( new QString("NOT IN (") );}   atom_commalist ')' { save_comparison( new QString(")") );}
+        |	scalar_exp IN '('   { save_comparison( new QString("IN (") );}  atom_commalist ')' { save_comparison( new QString(")") );}
         ;
 
 atom_commalist:
                 atom
-        |	atom_commalist ',' atom
+        |	atom_commalist ','  { save_comparison( new QString(",") );}  atom
         ;
 
 all_or_any_predicate:
@@ -510,33 +511,43 @@ subquery:
 
 scalar_exp:
                 scalar_exp '+' { save_comparison($2);} scalar_exp
-        |	scalar_exp '-' scalar_exp
+        |	scalar_exp '-'  { save_comparison($2);}   scalar_exp
         |       scalar_exp CONCATE { save_comparison($2);}  scalar_exp
-        |	scalar_exp '*' scalar_exp
-        |	scalar_exp '/' scalar_exp
-        |	'+' scalar_exp %prec UMINUS
-        |	'-' scalar_exp %prec UMINUS
+        |	scalar_exp '*'  { save_comparison($2);}   scalar_exp
+        |	scalar_exp '/'  { save_comparison($2);}   scalar_exp
+        |	'+'  { save_comparison($1);}   scalar_exp %prec UMINUS
+        |	'-'   { save_comparison($1);}   scalar_exp %prec UMINUS
         |	atom
+         |       NULLX  { save_comparison(new QString("NULL") );}
         |	column_ref
         |	function_ref
         |	'(' scalar_exp ')'
         ;
 
-/*
+
 
 scalar_exp_commalist:
                 scalar_exp
-        |	scalar_exp_commalist ',' scalar_exp
+        |	scalar_exp_commalist ',' { save_comparison(new QString(',') );} scalar_exp
         ;
-*/
+
 
 scalar_exp_commalist_for_selection:
 
                scalar_exp opt_alias { reset_saved_sel_columns($2); }
-        |	scalar_exp_commalist_for_selection ',' scalar_exp opt_alias
+        |	scalar_exp_commalist_for_selection ',' scalar_exp opt_alias { reset_saved_sel_columns($4); }
         ;
 
+func_arg:
+                scalar_exp
+        |       NAME ARG_REF { save_comparison($1); save_comparison($2);  } scalar_exp
 
+        ;
+
+func_arg_comalist:
+                func_arg
+         |      func_arg_comalist ','  { save_comparison(new QString(',') );}  func_arg
+         ;
 
 
 opt_alias:
@@ -552,20 +563,28 @@ atom:
         ;
 
 parameter_ref:
-                parameter
+                parameter { save_comparison($1);}
         |	parameter parameter
         |	parameter INDICATOR parameter
         ;
 
+
+
 function_ref:
-                AMMSC '(' '*' ')'
+                AMMSC '(' '*' ')' { save_comparison($4);}
         |	AMMSC '(' DISTINCT column_ref ')'
         |	AMMSC '(' ALL scalar_exp ')'
         |	AMMSC '(' scalar_exp ')'
+        |       AMMSCF  '('   { save_comparison( new QString(*$1 + "("));}   scalar_exp_commalist ')' { save_comparison(new QString(')') );}
+        |       package_ref  '('  { save_comparison($2);}  func_arg_comalist ')'  { save_comparison(new QString(')') );}
         ;
 
+
+
+
+
 literal:
-                STRING
+                STRING  { save_comparison($1);}
         |	INTNUM { save_comparison($1);}
         |	APPROXNUM
         ;
@@ -576,6 +595,14 @@ table:
                 NAME
         |	NAME '.' NAME
         ;
+
+package_ref:
+
+                NAME   { save_comparison($1);}
+        |       NAME '.' NAME  { save_comparison( new QString(*$1 + "." + *$3) );}
+        |	NAME '.' NAME '.' NAME { save_comparison( new QString(*$1 + "." + *$3 + "." + *$5 ) );}
+        ;
+
 
 column_ref:
                 NAME  { save_sel_cols( new QString(), $1 ); }

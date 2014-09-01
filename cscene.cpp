@@ -1,4 +1,4 @@
-
+#include <QStack>
 #include <QKeyEvent>
 #include "cscene.h"
 #include "expr_dialog.h"
@@ -12,6 +12,171 @@ cscene::cscene(QObject *parent): QGraphicsScene(parent)
     //menu.
     connect(this,SIGNAL(selectionChanged()),this,SLOT(performselection()));
 }
+
+
+
+void cscene::arrange_tables()
+{
+
+QList<QList<calink * > > p1;
+QList<QList<calink * > > p2;
+QList<int> linkcounts;
+QList<catable * > tables;
+QList<int> ptables;
+QList<calink * > links;
+QList<catable *> p1t;
+QList<catable *> p2t;
+
+
+foreach(QGraphicsItem * item,items())
+  {
+
+   if( (item->type() & TTYPE_LINK)  == TTYPE_LINK   )
+     {
+   calink * link = static_cast<calink * >(item);
+   if( !(( p1t.indexOf( link->p1) >= 0 && p2t.indexOf( link->p2) >= 0 )
+           || ( p1t.indexOf( link->p2) >= 0 && p2t.indexOf( link->p1) >= 0 )  )  )
+ {
+       links.append(link);
+  p1t.append(link->p1);
+  p2t.append(link->p2);
+   }
+   }
+   if( (item->type() & TTYPE_ABSTRACT)  == TTYPE_ABSTRACT   )
+     {
+
+  tables.append(static_cast<catable * >(item));
+   }
+
+}
+
+int maxcount = 0;
+catable *  maxtable=0;
+foreach (catable * table, tables) {
+    QList<calink * > p1l;
+    QList<calink * > p2l;
+int lcount = 0;
+foreach(calink * link,links)
+ {
+if(link->p1 == table)
+  {
+  p1l.append(link);
+  lcount++;
+   }
+if(link->p2 == table)
+  {
+  p2l.append(link);
+  lcount++;
+   }
+}
+
+if(maxcount < lcount)
+  {
+  maxcount =lcount;
+  maxtable = table;
+}
+//linkcounts.append(lcount);
+p1.append(p1l);
+p2.append(p2l);
+
+}
+
+enum vert_colors
+{
+WHITE,
+GRAY,
+BLACK
+
+};
+
+
+
+if(maxtable)
+ {
+QList<int> tcolors;
+for(int i = 0;i<tables.count();i++)
+{
+tcolors.append(WHITE);
+linkcounts.append(100000);
+ptables.append(i);
+}
+
+int tind = tables.indexOf(maxtable);
+tcolors[tind] = GRAY;
+linkcounts[tind] = 0;
+QStack<int> tstack;
+tstack.push(tind);
+while(tstack.isEmpty())
+ {
+ tind = tstack.pop();
+ QList<calink * >  p1c = p1[tind];
+ for(int i=0;i<p1c.count();i++  )
+ {
+ int rind = tables.indexOf( p1c[i]->p2);
+ if(tcolors[rind] == WHITE)
+  {
+  tcolors[rind] = GRAY;
+  linkcounts[rind] = linkcounts[tind] + 1;
+    ptables[rind] = tind;
+    tstack.push(rind);
+ }
+ }
+    p1c = p2[tind];
+ for(int i=0;i<p1c.count();i++  )
+ {
+ int rind = tables.indexOf( p1c[i]->p1);
+ if(tcolors[rind] == WHITE)
+  {
+  tcolors[rind] = GRAY;
+  linkcounts[rind] = linkcounts[tind] + 1;
+    ptables[rind] = tind;
+    tstack.push(rind);
+ }
+ }
+
+ tcolors[tind]=BLACK;
+
+
+ }
+}
+
+
+
+
+
+
+}
+
+
+
+QString cscene::export_allt_to_graphml()
+{
+    QString xmlstr = QString("<?xml version=\"1.0\" encoding=\"UTF-8\"?> "
+                             "   <graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\" "
+                             "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                             "   xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns "
+                             "   http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\"> "
+                             "  <graph id=\"G\" edgedefault=\"undirected\">");
+    QString linklist;
+
+    for(int i=0;i<alltables->count();i++)
+    {
+    xmlstr += QString("<node id=\"n%1\"/>\n").arg(i);
+    for(int j=0;j<alltables->at(i)->fkeytables.count();j++)
+      {
+        ctable * ftable =  alltables->at(i)->fkeytables[j];
+       // int f_ind = alltables->indexOf(ftable)
+        linklist += QString(" <edge source=\"n%1\" target=\"n%2\"/>\n")
+                .arg(i)
+                .arg(alltables->indexOf(ftable));
+    }
+
+    }
+  return xmlstr + linklist +  QString("</graph></graphml>");
+
+}
+
+
 
 
 void cscene::mousePressEvent(QGraphicsSceneMouseEvent * event)
@@ -205,9 +370,17 @@ void cscene::add_link(catable * first, catable * second,
  p1 = QPointF(0,(0.5 + (qreal) firstcol)   * first->defaultrowhight );
  p2 = QPointF(0,(0.5 +  (qreal)secondcol) * second->defaultrowhight);
 
- if(second->mapToScene(0,0).x() > first->mapToScene(0,0).x() )
-    p1.setX( first->defaultwidth);
- else p2.setX( second->defaultwidth);
+ qreal fdist = abs(  second->mapToScene(0,0).x() -   first->mapToScene(0,0).x() - first->defaultwidth);
+ qreal sdist =  abs(second->mapToScene(0,0).x() + second->defaultwidth - first->mapToScene(0,0).x());
+
+
+ if(fdist <  sdist )
+     p1.setX( first->defaultwidth);
+
+    else
+      p2.setX( second->defaultwidth);
+
+
 
 
   p1m = first->mapToScene(p1) ;
@@ -694,7 +867,7 @@ void  cscene::publicate_keys()
             for(int i= 0;i<table->table->fkeys.count();i++)
             {
                 crtableitem * prim_item =   find_primary_table(table->table->fkeytables[i]);
-                if(prim_item)
+                if(prim_item && (prim_item != table) )
                     add_link(table,prim_item,table->table->fkeys[i]+1,
                              prim_item->table->primary+1,TTYPE_FOREIGN_LINK,true);
 

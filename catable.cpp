@@ -152,8 +152,8 @@ void catable::movetable( QPointF point)
 
             calink * link = static_cast<calink *>(item);
 
-
-                   moveoneline( link ,  point);
+                 if((link->p1 == this) || (link->p2 == this) )
+                   moveoneline( link , point);
 
 
 
@@ -188,63 +188,31 @@ void catable::set_type(int type)
 void catable::moveoneline(calink * link , QPointF point)
 {
 
-catable * remote_table = link->p1;
-    if(link->p1 == this)
-        remote_table = link->p2;
+    QLineF line =  link->line();
 
-    qreal pbefore = remote_table->scenePos().x()-ppressed.x();
-    qreal pnow =  remote_table->scenePos().x()-this->scenePos().x();
-qreal xdiff = 0;
-qreal xdifo =0;
+    if(this == link->p1 )
+        line.setP1( line.p1() + QPointF(0,point.y())  );
+    else
+            line.setP2( line.p2() + QPointF(0,point.y())  );
 
-    if(pbefore > 0 && pnow < 0 )
+
+    qreal fdist = abs(  link->p2->mapToScene(0,0).x() -   link->p1->mapToScene(0,0).x() - link->p1->defaultwidth);
+    qreal sdist =  abs(link->p2->mapToScene(0,0).x() + link->p2->defaultwidth - link->p1->mapToScene(0,0).x());
+
+
+    if(fdist <  sdist )
     {
-        xdiff = -defaultwidth;
-    xdifo = remote_table->defaultwidth;
+       line.setP1(QPointF( link->p1->mapToScene(0,0).x() + link->p1->defaultwidth ,line.p1().y())  );
+         line.setP2(QPointF( link->p2->mapToScene(0,0).x() ,line.p2().y())  );
+
+     }
+       else
+      {
+         line.setP1(QPointF( link->p1->mapToScene(0,0).x()  ,line.p1().y())  );
+         line.setP2(QPointF( link->p2->mapToScene(0,0).x() + link->p2->defaultwidth ,line.p2().y())  );
 
     }
-
-        if(pbefore < 0 && pnow > 0 )
-        {
-        xdiff = defaultwidth;
-xdifo = -remote_table->defaultwidth;
-        }
-
-  QLineF line =  link->line();
-
-  QPointF p1;
-
-
-
-  if(link->p1 == this)
-       p1 = line.p1();
-  else
-   p1 = line.p2();
-
-
-
-  if(xdiff!=0 )
-{
-
-      if(link->p1 == this)
-      line.setP2(line.p2()+QPointF( xdifo,0));
-      else
-        line.setP1(line.p1()+QPointF( xdifo,0));
-
-      p1.setX(p1.x()+xdiff);
-
-  ppressed = this->scenePos();
-
-  }
-
-  p1 += point;
- if(link->p1 == this)
-  line.setP1(p1);
-else
-   line.setP2(p1);
-
- link->setLine(line);
-
+link->setLine(line);
 
 
 }

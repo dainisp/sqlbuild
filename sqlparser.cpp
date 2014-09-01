@@ -125,6 +125,9 @@ void save_wh_cols(QString * table,QString * column)
 void save_sel_cols(QString * table,QString * column)
 {
 if( is_sel){
+
+
+
     current_sel_tables.append( table->toUpper());
     current_sel_columns.append( column->toUpper());
     current_sel_expression.append(QString(" ?%1").arg(current_sel_tables.count()));
@@ -185,7 +188,7 @@ void save_comparison_number(int num)
 void start_save(void)
 {
 
-
+    is_where = 0;
     is_sel = 1;
     wh_tables.clear();
     wh_columns.clear();
@@ -373,7 +376,7 @@ tlist.append( scene->addtable(tables->at(tableind),tbl_aliases[i]));
              if( tab_ind >=0 )
              {
                  tlist[tab_ind]->set_column_type(col_ind+1,CTYPE_OUTPUTFIELD);
-
+             if(sel_expressions[i].trimmed() != "?1")
                  tlist[tab_ind]->colstrings[col_ind+1] = sel_expressions[i];
 
 
@@ -572,7 +575,7 @@ colnames.prepend(QString("Expr%1").arg(expreslist.count()+1));
 
  }
 
-
+scene->arrange_tables();
 
 /*
  for(int i=0;i<sel_tables.count();i++ )

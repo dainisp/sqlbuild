@@ -528,15 +528,30 @@ void MainWindow::on_settb_clicked()
 
 }
 
+
+
 void MainWindow::on_exprb_clicked()
 {
-  if(scene.mode)
+
+
+    if(scene.mode)
     scene.mode = 0;
   else
       scene.mode = 1;
 
+/*
 
+    QFile outf("graph.xml");
+    if(outf.open(QIODevice::WriteOnly))
+  {
+   outf.write(scene.export_allt_to_graphml().toUtf8());
+    outf.close();
+
+    }
+
+*/
 }
+
 
 void MainWindow::on_toolButton_3_clicked()
 {
