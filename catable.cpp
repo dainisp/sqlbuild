@@ -1,4 +1,5 @@
 #include <QGraphicsScene>
+#include <cscene.h>
 #include "catable.h"
 #include "calink.h"
 #include "equ_dialog.h"
@@ -235,6 +236,26 @@ link->setLine(line);
 
  }
 
+void catable::set_column_tooltip(int colnum,QString toolt)
+{
+    foreach ( QGraphicsItem *  item, childItems()) {
+        if((item->type() == 8 ) && (item->pos().y()/defaultrowhight == colnum) )
+      item->setToolTip(toolt);
+
+    }
+
+}
+
+void catable::set_table_tooltip(QString toolt)
+{
+    foreach ( QGraphicsItem *  item, childItems()) {
+        if((item->type() == 8 ) && (item->pos().y() == 0) )
+      item->setToolTip(toolt);
+
+    }
+
+
+}
 
 
 void catable::mousePressEvent ( QGraphicsSceneMouseEvent * event )
@@ -260,20 +281,30 @@ if(exstr.isEmpty() && coltypes[fieldpos] != CTYPE_NORMAL  )
 }   else{
     colstrings[fieldpos] = exstr;
       set_column_type(fieldpos,CTYPE_OUTPUTFIELD);
+        set_column_tooltip(fieldpos,exstr);
 }
 return;
 }
 
 if(event->modifiers() & Qt::ControlModifier )
 {
-    QString exstr =  equ_Dialog::get_equation();
-if(exstr.isEmpty() && coltypes[fieldpos] != CTYPE_NORMAL  )
+QString exstr = equ_Dialog::get_equation(colstrings[fieldpos])  ;
+/*
+cscene * mscene = static_cast< cscene *>(scene());
+    if(mscene->expression.isEmpty())
+    exstr =  equ_Dialog::get_equation();
+    else
+    exstr =  equ_Dialog::get_equation(mscene->expression);
+    */
+
+    if(exstr.isEmpty() && coltypes[fieldpos] != CTYPE_NORMAL  )
 {
     set_column_type(fieldpos,CTYPE_NORMAL);
  colstrings[fieldpos] ="";
 }   else{
     colstrings[fieldpos] = exstr;
       set_column_type(fieldpos,CTYPE_WHERE_FIELD);
+      set_column_tooltip(fieldpos,exstr);
 }
 return;
 }

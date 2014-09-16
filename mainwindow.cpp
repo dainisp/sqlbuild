@@ -1,7 +1,8 @@
-#include <QFileDialog>
+
 #include <QDomDocument>
 #include <QMessageBox>
-#include <QSettings>
+#include <QPrintDialog>
+#include <QPrinter>
 #include "dialog.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -14,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->wh_date_e->setDate(QDate::currentDate());
     mustsave = false;
     ui->splitter->setStretchFactor(0,0);
     ui->splitter->setStretchFactor(1,1);
@@ -26,11 +28,19 @@ ui->laukums->setScene(&scene);
   //connect(ui->laukums,SIGNAL(scaled(qreal)),this,SLOT(onviewscaled(qreal)));
   ui->laukums->setAcceptDrops(true);
 
- QSettings settings("Dainis Soft", "SQLBuild");
-  settings.beginGroup("TableList");
- tpath = settings.value("tablepath").toString();
-   kpath = settings.value("keypath").toString();
-     settings.endGroup();
+ //QSettings settings();
+  dialog = new QFileDialog(this);
+
+ settings = new QSettings("Dainis Soft", "SQLBuild");
+  settings->beginGroup("TableList");
+ tpath = settings->value("tablepath").toString();
+   kpath = settings->value("keypath").toString();
+     settings->endGroup();
+     settings->beginGroup("paths");
+     if(! settings->contains("shemapath"))
+         settings->setValue("shemapath",QDir::homePath());
+     settings->endGroup();
+
     if(!tpath.isEmpty() && !kpath.isEmpty() )
   {
    import_tables(tpath);
@@ -101,12 +111,12 @@ void MainWindow::save_settings()
 
     if(mustsave)
    {
-        QSettings settings("Dainis Soft", "SQLBuild");
-         settings.beginGroup("TableList");
-         settings.setValue("tablepath", tpath);
-         settings.setValue("keypath", kpath );
-        settings.endGroup();
 
+         settings->beginGroup("TableList");
+         settings->setValue("tablepath", tpath);
+         settings->setValue("keypath", kpath );
+        settings->endGroup();
+     settings->sync();
     }
 
 }
@@ -115,6 +125,9 @@ void MainWindow::save_settings()
 
 MainWindow::~MainWindow()
 {
+    settings->sync();
+    delete dialog;
+    delete settings;
     delete ui;
 }
 
@@ -468,12 +481,20 @@ void MainWindow::on_foreignl_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::on_savefb_clicked()
 {
-    QString fname = QFileDialog::getSaveFileName ( this, QString("Save query"),QString(),QString("Sqlbuild (*.sqb)"));
+/*
+     settings->beginGroup("paths");
+     if(! settings->contains("shemapath"))
+         settings->setValue("shemapath",QDir::homePath());
+*/
+QString savepath =    settings->value("paths/shemapath").toString();
+
+    QString fname = dialog->getSaveFileName ( this, QString("Save query"),savepath,QString("Sqlbuild (*.sqb)"));
     if(!fname.isEmpty())
      {
 save_field(fname);
-
-
+QString lastfold = fname;
+if(lastfold != savepath)
+    settings->setValue("paths/shemapath",lastfold);
 
 
     }
@@ -482,12 +503,19 @@ save_field(fname);
 
 void MainWindow::on_loadfb_clicked()
 {
-    QString fname = QFileDialog::getOpenFileName ( this, "Open query" ,QString(),QString("Sqlbuild (*.sqb)"));
+
+    QString savepath =    settings->value("paths/shemapath").toString();
+
+    QString fname = dialog->getOpenFileName ( this, "Open query" ,savepath,QString("Sqlbuild (*.sqb)"));
     if(!fname.isEmpty())
      {
 
       load_field(fname) ;
     //scene.place_tables(sertable,alltables);
+
+      QString lastfold = fname;
+      if(lastfold != savepath)
+          settings->setValue("paths/shemapath",lastfold);
 
 
 
@@ -567,4 +595,50 @@ void MainWindow::on_toolButton_3_clicked()
 void MainWindow::on_toolButton_2_clicked()
 {
 scene.add_selected_link();
+}
+
+void MainWindow::on_wh_expr_c_currentIndexChanged(const QString &arg1)
+{
+    if(!arg1.isEmpty()  )
+    {
+        if(ui->textrb->isChecked())
+            scene.expression = "?1 " + arg1 + " '" + ui->wh_txt_e->text() + "'";
+        if(ui->intrb->isChecked())
+             scene.expression = "?1 " + arg1 + QString(" %1").arg(ui->wh_int_b->value()) ;
+        if(ui->datrb->isChecked())
+            scene.expression = "?1 " + arg1 + QString(" to_date('%1','dd.mm.yyyy')").arg(ui->wh_date_e->date().toString("dd.MM.yyyy")) ;
+
+    }
+    else scene.expression = QString();
+}
+
+void MainWindow::on_textrb_toggled(bool checked)
+{
+    if(checked && !ui->wh_expr_c->currentText().isEmpty())
+        scene.expression = "?1 " + ui->wh_expr_c->currentText() + " '" + ui->wh_txt_e->text() + "'";
+
+}
+
+void MainWindow::on_intrb_toggled(bool checked)
+{
+  if(checked && !ui->wh_expr_c->currentText().isEmpty())
+       scene.expression = "?1 " + ui->wh_expr_c->currentText() + QString(" %1").arg(ui->wh_int_b->value()) ;
+}
+
+void MainWindow::on_datrb_toggled(bool checked)
+{
+  if(checked && !ui->wh_expr_c->currentText().isEmpty())
+       scene.expression = "?1 " + ui->wh_expr_c->currentText() + QString(" to_date('%1','dd.mm.yyyy')").arg(ui->wh_date_e->date().toString("dd.MM.yyyy")) ;
+}
+
+void MainWindow::on_printb_clicked()
+{
+
+    QPrinter printer;
+    if (QPrintDialog(&printer).exec() == QDialog::Accepted) {
+        QPainter painter(&printer);
+        painter.setRenderHint(QPainter::Antialiasing);
+        scene.render(&painter);
+    }
+
 }

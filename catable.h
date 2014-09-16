@@ -32,7 +32,8 @@ int colcount;
 void movetable( QPointF point);
   void set_column_type(int colnum,int coltype);
    void set_column_types(QList<int> coltypes);
-
+   void set_column_tooltip(int colnum,QString toolt);
+   void set_table_tooltip(QString toolt);
   void moveoneline(calink *link , QPointF point);
   void set_type(int type);
   int type() const

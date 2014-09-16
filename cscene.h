@@ -18,7 +18,7 @@ public:
 // QList<ctableitem *>   usedtables;
 //  QList<QGraphicsLineItem *>  usedlines;
 //  QList<cexpritem * > usedexprs;
-
+QString expression;
  QList<ctable * > * alltables;
 void  publicate_keys();
 int mode;

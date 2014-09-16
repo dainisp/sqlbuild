@@ -133,7 +133,6 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>(?i:RTRIM) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SCN_TO_TIMESTAMP) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SESSIONTIMEZONE) { yylval.strval = save_str(yytext); return AMMSCF; }
-<SQL>(?i:SET) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SIGN) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SIN) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SINH) { yylval.strval = save_str(yytext); return AMMSCF; }
@@ -144,7 +143,7 @@ EXEC[ \t]+SQL	{ BEGIN SQL; start_save(); }
 <SQL>(?i:SYS_EXTRACT_UTC) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SYS_XMLAGG) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:SYS_XMLGEN) { yylval.strval = save_str(yytext); return AMMSCF; }
-<SQL>(?i:SYSDATE) { yylval.strval = save_str(yytext); return AMMSCF; }
+<SQL>(?i:SYSDATE) { yylval.strval = save_str(yytext); return SYSDATE; }
 <SQL>(?i:SYSTIMESTAMP) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:TAN) { yylval.strval = save_str(yytext); return AMMSCF; }
 <SQL>(?i:TANH) { yylval.strval = save_str(yytext); return AMMSCF; }

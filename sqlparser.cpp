@@ -125,12 +125,42 @@ void save_wh_cols(QString * table,QString * column)
 void save_sel_cols(QString * table,QString * column)
 {
 if( is_sel){
+int colind=-1;
+int tabind=-1;
+    if(!column->isEmpty())
+        colind = current_sel_columns.indexOf(column->toUpper());
 
 
 
+    if(!table->isEmpty())
+      {
+        if(colind>=0  )
+          {
+            if(current_sel_tables[colind] == table->toUpper()  )
+                tabind = colind;
+        }
+        else
+        tabind = current_sel_tables.indexOf(table->toUpper());
+    }
+    else
+    {
+        if(colind >= 0)
+            tabind = colind;
+     }
+
+    if(column->isEmpty() && tabind >= 0  )
+        colind = tabind;
+
+
+
+
+      if( tabind >=0 &&  tabind == colind  )
+           current_sel_expression.append(QString(" ?%1").arg(tabind+1));
+      else{
     current_sel_tables.append( table->toUpper());
     current_sel_columns.append( column->toUpper());
     current_sel_expression.append(QString(" ?%1").arg(current_sel_tables.count()));
+      }
 }
 
 else save_wh_cols( table, column);
@@ -376,9 +406,14 @@ tlist.append( scene->addtable(tables->at(tableind),tbl_aliases[i]));
              if( tab_ind >=0 )
              {
                  tlist[tab_ind]->set_column_type(col_ind+1,CTYPE_OUTPUTFIELD);
-             if(sel_expressions[i].trimmed() != "?1")
-                 tlist[tab_ind]->colstrings[col_ind+1] = sel_expressions[i];
-
+                 if(sel_expressions[i].trimmed() != "?1" || !sel_aliases[i].isEmpty() )
+             {
+                  QString expr =  sel_expressions[i];
+                  if(!sel_aliases[i].isEmpty())
+                      expr += " " + sel_aliases[i];
+                 tlist[tab_ind]->colstrings[col_ind+1] = expr;
+                 tlist[tab_ind]->set_column_tooltip(col_ind+1,expr);
+             }
 
              }
 
@@ -464,7 +499,7 @@ int first_field,second_field,first_tab_ind,second_tab_ind;
       tlist[first_tab_ind]->set_column_type(first_field+1,CTYPE_WHERE_FIELD);
 
       tlist[first_tab_ind]->colstrings[first_field+1] = expression;
-
+        tlist[first_tab_ind]->set_column_tooltip(first_field+1,expression);
 
 
   }

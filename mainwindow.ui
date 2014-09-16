@@ -84,7 +84,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
-              <widget class="QComboBox" name="comboBox">
+              <widget class="QComboBox" name="wh_expr_c">
                <item>
                 <property name="text">
                  <string>=</string>
@@ -130,21 +130,21 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_4">
                <item>
-                <widget class="QRadioButton" name="radioButton">
+                <widget class="QRadioButton" name="textrb">
                  <property name="text">
                   <string/>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QRadioButton" name="radioButton_2">
+                <widget class="QRadioButton" name="intrb">
                  <property name="text">
                   <string/>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QRadioButton" name="radioButton_3">
+                <widget class="QRadioButton" name="datrb">
                  <property name="text">
                   <string/>
                  </property>
@@ -155,13 +155,13 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
-                <widget class="QLineEdit" name="lineEdit_2"/>
+                <widget class="QLineEdit" name="wh_txt_e"/>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox"/>
+                <widget class="QSpinBox" name="wh_int_b"/>
                </item>
                <item>
-                <widget class="QDateEdit" name="dateEdit"/>
+                <widget class="QDateEdit" name="wh_date_e"/>
                </item>
               </layout>
              </item>
@@ -208,6 +208,13 @@
          <widget class="QPushButton" name="savefb">
           <property name="text">
            <string>Save</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="printb">
+          <property name="text">
+           <string>Print</string>
           </property>
          </widget>
         </item>

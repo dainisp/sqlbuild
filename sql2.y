@@ -62,7 +62,7 @@ extern void reset_saved_sel_columns(QString * alias);
 %left OR
 %left AND
 %left NOT
-%left <strval> COMPARISON AMMSC AMMSCF ADD_MONTHS PARAMETER
+%left <strval> COMPARISON AMMSC AMMSCF ADD_MONTHS PARAMETER SYSDATE
 %left  <strval>  '+' '-' CONCATE
 %left  <strval>   '*' '/'
 %nonassoc UMINUS
@@ -452,7 +452,7 @@ predicate:
 
 comparison_predicate:
                 scalar_exp COMPARISON { save_comparison($2);} scalar_exp
-        |	scalar_exp COMPARISON  subquery
+   //     |	scalar_exp COMPARISON { save_comparison($2);} subquery
         ;
 
 between_predicate:
@@ -461,8 +461,8 @@ between_predicate:
         ;
 
 like_predicate:
-                scalar_exp NOT LIKE atom opt_escape
-        |	scalar_exp LIKE atom opt_escape
+                scalar_exp NOT LIKE { save_comparison( new QString(" NOT LIKE") );} atom opt_escape
+        |	scalar_exp LIKE  { save_comparison( new QString(" LIKE") );} atom opt_escape
         ;
 
 opt_escape:
@@ -480,7 +480,7 @@ test_for_null:
 in_predicate:
                 scalar_exp NOT IN '(' subquery ')'
         |	scalar_exp IN '(' subquery ')'
-        |	scalar_exp NOT IN '('  { save_comparison( new QString("NOT IN (") );}   atom_commalist ')' { save_comparison( new QString(")") );}
+        |	scalar_exp NOT IN '('  { save_comparison( new QString(" NOT IN (") );}   atom_commalist ')' { save_comparison( new QString(")") );}
         |	scalar_exp IN '('   { save_comparison( new QString("IN (") );}  atom_commalist ')' { save_comparison( new QString(")") );}
         ;
 
@@ -586,6 +586,7 @@ function_ref:
 literal:
                 STRING  { save_comparison($1);}
         |	INTNUM { save_comparison($1);}
+        |       SYSDATE { save_comparison($1);}
         |	APPROXNUM
         ;
 

@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QModelIndex>
 #include <QListWidgetItem>
+#include <QSettings>
+#include <QFileDialog>
 #include <cscene.h>
 
 //#include "ctableitem.h"
@@ -24,6 +26,8 @@ public:
    bool mustsave;
    QString tpath;
      QString kpath;
+QFileDialog * dialog;
+   QSettings * settings;
    void save_settings();
 
    void save_field(QString filename);
@@ -73,6 +77,16 @@ private slots:
    void on_toolButton_3_clicked();
 
    void on_toolButton_2_clicked();
+
+   void on_wh_expr_c_currentIndexChanged(const QString &arg1);
+
+   void on_textrb_toggled(bool checked);
+
+   void on_intrb_toggled(bool checked);
+
+   void on_datrb_toggled(bool checked);
+
+   void on_printb_clicked();
 
 private:
     Ui::MainWindow *ui;

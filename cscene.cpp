@@ -497,7 +497,7 @@ QString selstr;
            }
            else
             {
-            addsel = "," +  table->colstrings[i].replace("?",QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower());
+            addsel = "," +  table->colstrings[i].replace("?1",QString("%1.%2").arg(table->tablestring).arg(table->colnames[i]).toLower());
            }
 
            if(selwidth + addsel.count() > maxrowwidth )
@@ -593,6 +593,9 @@ QString selstr;
 
 
          }
+
+
+
          else
          {
          if(link->p1->type() == TTYPE_EXPRESSION || link->p2->type() == TTYPE_EXPRESSION )
@@ -621,8 +624,8 @@ QString selstr;
        if(exprmap.keys().indexOf(expr) < 0)
            exprmap.insert(expr,expr->tablestring);
 
-        exprmap[expr] = exprmap[expr].replace("?" + QString::number(exprcol),table->tablestring + "." + table->colnames[tabcol]  );
-        if(exprmap[expr].indexOf("?")<0)
+        exprmap[expr] = exprmap[expr].replace("?1" + QString::number(exprcol),table->tablestring + "." + table->colnames[tabcol]  );
+        if(exprmap[expr].indexOf("?1")<0)
         {
             if( (exprtype  & TTYPE_EXPRESSION_WHERE)  == TTYPE_EXPRESSION_WHERE   )
          {
@@ -671,6 +674,16 @@ QString selstr;
 
 
          }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -750,11 +763,13 @@ catable * tp1 = tlist[p1];
        catable * tp2 = tlist[p2];
  int cols1,cols2;
  *stream >> cols1 >> cols2;
-
+/*
 if(directedt == p1 )
     add_link(tp2,tp1,cols2,cols1,ltype,true);
 else
- add_link(tp1,tp2,cols1,cols2,ltype,(directedt >= 0));
+    */
+
+ add_link(tp1,tp2,cols1,cols2,ltype,(ltype == TTYPE_FOREIGN_LINK));
 
 
  }
@@ -854,9 +869,19 @@ void  cscene::publicate_keys()
         return;
 
    // ----------------------------------
+ /*
+    QList<crtableitem *>   p1;
+ QList<crtableitem *>   p2;
 
+    foreach (QGraphicsItem *  item, items())
+        if((item->type() & TTYPE_FOREIGN_LINK) == TTYPE_FOREIGN_LINK )
+  {
+            calink * link = static_cast<calink *>(item);
+      p1.append(link->p1);
+      p2.append(link->p2);
+        }
 
-
+    */
 
     foreach (QGraphicsItem *  item, items())
        {
@@ -866,10 +891,12 @@ void  cscene::publicate_keys()
 
             for(int i= 0;i<table->table->fkeys.count();i++)
             {
+
+
                 crtableitem * prim_item =   find_primary_table(table->table->fkeytables[i]);
-                if(prim_item && (prim_item != table) )
-                    add_link(table,prim_item,table->table->fkeys[i]+1,
-                             prim_item->table->primary+1,TTYPE_FOREIGN_LINK,true);
+                if(prim_item && (prim_item != table)    )
+                    add_link( prim_item ,table,prim_item->table->primary+1 , table->table->fkeys[i]+1
+                             ,TTYPE_FOREIGN_LINK,true);
 
             }
 
